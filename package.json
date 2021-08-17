@@ -1,0 +1,16 @@
+{
+  "name": "fn-svl-settlements",
+  "version": "1.0.0",
+  "description": "Proyecto de automatización del proceso de liquidación",
+  "scripts": {
+    "test": "echo \"No tests yet...\"",
+    "start": "func start"
+  },
+  "author": "Nicolás Améstica Vidal",
+  "dependencies": {
+    "@azure/storage-blob": "^12.7.0",
+    "dateformat": "^4.5.1",
+    "mssql": "^7.2.0",
+    "path": "^0.12.7"
+  }
+}

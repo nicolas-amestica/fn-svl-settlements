@@ -1,0 +1,58 @@
+variables:
+  PASSWORD: ${PASSWORD}
+  TENANT_ID: ${TENANT_ID}
+  CLIENT_ID: ${CLIENT_ID}
+
+.deploy: &deploy_definition
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:2.0.45
+  before_script:
+    - az login --service-principal --username ${AZURE_SERVICE_PRINCIPAL_USER} --password ${AZURE_SERVICE_PRINCIPAL_PASSWORD} --tenant ${AZURE_TENANT_ID}
+  script:
+    - echo ${AZURE_FUNCTION_APP}
+    - az functionapp deployment source config-zip -n ${AZURE_FUNCTION_APP} -g ${RESOURCE_GROUP} --src build.zip
+
+image: node:14-alpine
+stages:
+  - install
+  - package
+  - deploy
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - node_modules/
+
+install:
+  stage: install
+  script:
+    - apk add git
+    - npm install .
+
+package:
+  stage: package
+  script:
+    - apk --no-cache add zip
+    - apk add git
+    - npm install
+    - zip -r build.zip .
+  artifacts:
+    paths:
+      - build.zip
+    expire_in: 1 week
+
+deploy:test:
+  <<: *deploy_definition
+  environment: 
+    name: test
+  when: manual
+  only:
+    - test
+
+deploy:prod:
+  <<: *deploy_definition
+  environment:
+    name: production
+  when: manual
+  only:
+    - master
