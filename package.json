@@ -10,7 +10,8 @@
   "dependencies": {
     "@azure/storage-blob": "^12.7.0",
     "dateformat": "^4.5.1",
-    "mssql": "^7.2.0",
-    "path": "^0.12.7"
+    "mssql": "^6.3.2",
+    "path": "^0.12.7",
+    "uuid": "^7.0.3"
   }
 }
