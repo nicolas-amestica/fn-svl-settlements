@@ -1,31 +1,40 @@
 'use strict';
-// const AzureStorage = require('azure-storage');
 const { BlobServiceClient } = require('@azure/storage-blob');
 
 /**
- * Función que expone el establecimiento de la conexión al blob storage.
- * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Función que sube archivos locales al blob Storage de AZURE.
+ * @param {String} containerName: Nombre del blobstorage.
+ * @param {String} fileName: Nombre del arcvivo.
+ * @param {String} filePath: Ruta del archivo.
+ * @return {[Json]}: Respuesta JSON que contiene el detalle de la acción realizada (incluye la URL del archivo), si falla retorna expceción.
  */
-module.exports.uploadLocalFile = async (containerName, fileName, filePath) => {
+module.exports.uploadFileFromLocal = async (containerName, fileName, filePath) => {
 
     try {
 
+        /** CONFIGURACIÓN DEL BLOB STORAGE. */
         const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
         const containerClient = blobServiceClient.getContainerClient(containerName);
         const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-        let uploadBlobResponse = await blockBlobClient.uploadFile(filePath);
 
+        /** SUBIR ARCHIVO. */
+        let uploadBlobResponse = await blockBlobClient.uploadFile(filePath);
         if (uploadBlobResponse.error)
             throw uploadBlobResponse.error
 
+        /** AGREGAR URL DEL ARCHIVO A RESPUESTA. */
         uploadBlobResponse.url = blockBlobClient.url;
-        
+
+        /** QUITAR CONTENIDO ESPEFÍFICO A RESPUESTA ANTES DE ENVIAR. */
         delete uploadBlobResponse.contentMD5;
 
+        /** RETORNA RESPUESTA. */
         return uploadBlobResponse;
 
     } catch (error) {
 
+        /** CAPTURA ERROR. */
+        console.log(error);
         return error
 
     }

@@ -11,7 +11,9 @@
     "@azure/storage-blob": "^12.7.0",
     "dateformat": "^4.5.1",
     "mssql": "^6.3.2",
+    "objects-to-csv-file": "^1.0.1",
     "path": "^0.12.7",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "xlsx": "^0.10.9"
   }
 }
