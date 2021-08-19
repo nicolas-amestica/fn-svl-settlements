@@ -12,15 +12,15 @@ module.exports.sendFromSendgrid = async () => {
 
     try {
 
-        const URL1 = 'https://storagesvlsettlements.blob.core.windows.net/reports/undefinedSellersLiquidados_202108131808.csv';
+        const URL1 = '';
 
         const msg = {
             from: process.env.MAIL_FROM,
             to: process.env.MAIL_TO,
-            cc: ['niamesvi3@gmail.com', 'nicoamestica@tactech.cl'],
-            subject: 'Liquidación 2020-08-13',
-            text: `Cuerpo del <b>correo</b>: ${URL1}`,
-            html: '<p>Hello HTML world!</p>'
+            cc: '',
+            subject: '',
+            text: ``,
+            html: ''
         };
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
             
