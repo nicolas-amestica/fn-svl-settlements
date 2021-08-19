@@ -10,6 +10,9 @@ const path = require('path')
  */
 module.exports.sendFromSendgrid = async () => {
 
+    /**   ************* EN CONSTRUCCIÓN *************  */
+
+
     try {
 
         const URL1 = '';
