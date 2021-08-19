@@ -6,8 +6,8 @@
 Específicamente, busca todos los folios que cumplan, parcialmente, los requerimietos para ser liquidados y que no tengan categoría.
 
 ## Utilización:
-Las características del endpount son las siguientes:
-### GET: skuReport:
+Las características del endpoint son las siguientes:
+### GET: {}/finances/settlement/skuReport:
 Generar reporte xlsx de los folios pendientes y folios sin categorías, sube el archivo a blob storage y luego envía email con el enlace del archivo.
 Debe tener conexión a la base de datos de finanzas.
 ```sh
