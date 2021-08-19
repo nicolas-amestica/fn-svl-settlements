@@ -6,6 +6,14 @@
 ##### Endpoints:
 El proyecto contiene los siguientes endpoints:
 
+###### skuReport:
+Generar reporte xlsx de los folios pendientes y folios sin categorías, sube el archivo a blob storage y luego envía email con el enlace del archivo.
+Debe tener conexión a la base de datos de finanzas.
+```sh
+El endpoint no contiene body.
+El endpoint tiene un params con clave code y valor 
+```
+
 # INSTALACIÓN
 ##### Instalar las siguientes dependencias:
 Requiere [Node.js](https://nodejs.org/) v14.157.3.

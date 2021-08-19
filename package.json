@@ -9,8 +9,11 @@
   "author": "Nicolás Améstica Vidal",
   "dependencies": {
     "@azure/storage-blob": "^12.7.0",
+    "@sendgrid/mail": "^7.4.6",
     "dateformat": "^4.5.1",
     "mssql": "^6.3.2",
+    "nodemailer": "^6.6.3",
+    "nodemailer-express-handlebars": "^4.0.0",
     "objects-to-csv-file": "^1.0.1",
     "path": "^0.12.7",
     "uuid": "^7.0.3",

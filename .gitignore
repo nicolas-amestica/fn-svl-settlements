@@ -23,6 +23,7 @@ appsettings.json
 local.settings.json
 
 node_modules/
+tmp/
 dist
 
 .DS_Store

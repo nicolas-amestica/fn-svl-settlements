@@ -5,7 +5,7 @@ const mySQL = require('../../../common/mySQL');
 const fileManager = require('../../../common/fileManager');
 const dateFormat = require('dateformat');
 const blobStorage = require('../../../common/blobStorage');
-// const sendGrid = require('../../../common/sendgrid');
+const email = require('../../../common/email');
 const path = require("path");
 
 /**
@@ -126,10 +126,9 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
 }
 
 /**
- * Subir archivo csv a Azure Blob Storage.
- * @param {[Json]} fileName: Nombre del archivo a generar.
- * @param {String} filePath: Ruta del archivo.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Subir archivo a Azure Blob Storage.
+ * @param {String} fullFileName: Nombre del archivo a subir.
+ * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
  */
 module.exports.uploadFileFromPath = async (fullFileName) => {
 
@@ -157,11 +156,66 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
 }
 
 /**
+ * Función que envía email según los parámetros que se configuren.
+ * @param {String} urlFile: URL del archivo subido a Blob Storage.
+ * @return {Json}: Respuesta JSON de la función que retorna el resultado del envío del email, incluye respuesta satisfactoria o fallo.
+ */
+ module.exports.sendEmail = async (urlFile) => {
+
+    try {
+
+        /** VALIDA QUE EL PARÁMETRO DE ENTRADA TENGA CONTENIDO. */
+        if (urlFile.length == 0)
+            return { status: 201, body: { message: 'No se pudo enviar el email.', detalle: 'No se ha podido obtener la url del archivo.' }};
+
+        /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        const configEmail = {
+            from: process.env.GMAIL_AUTH_USER,
+            to: process.env.SENDGRID_MAIL_TO,
+            cc: process.env.SENDGRID_MAIL_CC,
+            bcc: process.env.SENDGRID_MAIL_BCC,
+            subject: `PROCESO LIQUIDACIÓN ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+            template: 'settlement',
+            context: {
+                dear: 'Estimados,',
+                message: 'Se adjunta enlace con primer informe denominado InformeSKU de la liquidación:',
+                url: urlFile,
+                nameURL: 'INFORME_SKU',
+                greeting: 'Atte.',
+                sender: 'Nicolás Améstica Vidal'
+            }
+        }
+
+        /** CONFIGURAR PARÁMETROS DE HBS. */
+        const optionsHBS = {
+            partialsDir: 'shared/views/email',
+            viewPath: '../shared/views/email'
+        }
+
+        /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        let result = await email.sendFromGmail(configEmail, optionsHBS);
+        if (result.errno)
+            return { status: 201, body: { message: 'No se pudo enviar el email.', detalle: result }};
+
+        /** RETORNO RESPUESTA. */
+        return result;
+
+    } catch (error) {
+
+        /** CAPTURA ERROR. */
+        console.log(error);
+        return { status: 400, body: { error: 'No se pudo enviar el mail.', detalle: error }, error: {} };
+
+    }
+
+}
+
+/**
  * Eliminar el archivo csv ubicado en carpeta temporal.
  * @param {String} filePath: Ruta del archivo que está en carpeta temporal.
  * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports.deleteFile = async (filePath) => {
+ module.exports.deleteFile = async (filePath) => {
 
     try {
 
@@ -178,33 +232,6 @@ module.exports.deleteFile = async (filePath) => {
         /** CAPTURA ERROR. */
         console.log(error);
         return { status: 400, body: { error: 'No se pudo seguir validando los folios.', detalle: error }, error: {} };
-
-    }
-
-}
-
-/**
- * Eliminar el archivo csv ubicado en carpeta temporal.
- * @param {String} filePath: Ruta del archivo que está en carpeta temporal.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
- */
- module.exports.sendMail = async () => {
-
-    try {
-
-        /** ELIMINAR ARCHIVO DE CARPETA TEMPORALES. */
-        let result = await sendGrid.send();
-        if (result.errors)
-            return { status: 401, body: { error: 'Imposible enviar mail.' }, error: {} };
-
-        /** RETORNO RESPUESTA. */
-        return result;
-
-    } catch (error) {
-
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo enviar el mail.', detalle: error }, error: {} };
 
     }
 
