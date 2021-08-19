@@ -6,7 +6,7 @@
 ##### Endpoints:
 El proyecto contiene los siguientes endpoints:
 
-###### skuReport:
+###### GET: skuReport:
 Generar reporte xlsx de los folios pendientes y folios sin categorías, sube el archivo a blob storage y luego envía email con el enlace del archivo.
 Debe tener conexión a la base de datos de finanzas.
 ```sh
