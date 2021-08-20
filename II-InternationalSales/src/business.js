@@ -2,7 +2,7 @@
 const salesManagement = require('./management/sales');
 
 /**
- * Obtiene las ventas que no tengan campo interncional y lo actualiza según corresponda.
+ * Obtiene las ventas que no tengan campo internacional y lo actualiza según corresponda.
  * @return {json}: Respuesta JSON que retorna la respuesta del proceso completo, si falla retorna excepción.
  */
 module.exports.updateInternationalsales = async () => {
