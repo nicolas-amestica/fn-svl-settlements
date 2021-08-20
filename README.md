@@ -12,6 +12,13 @@ Debe tener conexión a la base de datos de finanzas.
 El endpoint no contiene body.
 El endpoint tiene un params con clave 'code' y valor ''
 ```
+#### 2.- GET: {}/finances/settlement/updateInternationalSales:
+Actualizar el campo international de las ventas de finanzas.
+Debe tener conexión a la base de datos de finanzas y usuarios.
+```sh
+El endpoint no contiene body.
+El endpoint tiene un params con clave 'code' y valor ''
+```
 
 ## INSTALACIÓN
 ### Instalar las siguientes dependencias:
