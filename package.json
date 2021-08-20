@@ -11,6 +11,7 @@
     "@azure/storage-blob": "^12.7.0",
     "@sendgrid/mail": "^7.4.6",
     "dateformat": "^4.5.1",
+    "lodash.groupby": "^4.6.0",
     "mssql": "^6.3.2",
     "nodemailer": "^6.6.3",
     "nodemailer-express-handlebars": "^4.0.0",

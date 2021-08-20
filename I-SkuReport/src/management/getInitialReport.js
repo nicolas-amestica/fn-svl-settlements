@@ -64,6 +64,9 @@ module.exports.getDataFinance = async () => {
         if (!dataSinCategoria)
             return { status: 400, body: { error: 'No se pudo consultar los datos de finanzas.' }, error: {} };
 
+        /** CERRAR CONEXIÓN A SQL. */
+        sql.close();
+
         /** RETORNO RESPUESTA. */
         return [
                 {
