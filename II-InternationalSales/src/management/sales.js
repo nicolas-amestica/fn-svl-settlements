@@ -4,7 +4,6 @@ const mySQL = require('../../../common/mySQL');
 const queryGenerator = require('../../../common/queryGenerator');
 const groupBy = require('lodash.groupby');
 
-
 /**
  * Obtiene los folios desde la base de datos de finanzas.
  * @return {[Json]}: Respuesta JSON que contiene data y name de folios pendientes y sin sku, si falla retorna excepción.
@@ -54,8 +53,8 @@ module.exports.getDataFinance = async () => {
 };
 
 /**
- * Subir archivo a Azure Blob Storage.
- * @param {[Json]} objRuts: Arreglo de objetos con rut a consultar si es que son nacionales o internacionales.
+ * Obtiene companies desde la base de datos de usuarios.
+ * @param {[Json]} objRuts: Arreglo de objetos con rut a consultar indicando si son companies nacionales o internacionales.
  * @return {json}: Respuesta JSON de la función que retorna el resultado del mapeo de rut nacionales e internacionales, incluye respuesta satisfactoria o fallo.
  */
 module.exports.getDataUser = async (objRuts) => {
@@ -80,7 +79,8 @@ module.exports.getDataUser = async (objRuts) => {
                 companies,
                 communes
             WHERE
-                companies.commune_id = communes.id
+                companies.deleted_At IS NULL
+                AND companies.commune_id = communes.id
                 AND companies.rut IN (${(await queryGenerator.inQueryGenerator(objRuts)).replace(/["]+/g, '')});
             `;
 
@@ -110,44 +110,58 @@ module.exports.getDataUser = async (objRuts) => {
 }
 
 /**
- * Subir archivo a Azure Blob Storage.
+ * Actualizar ventas indicando si son ventas nacionales o internacionales.
  * @param {[Json]} internationalSales: Arreglo de objetos con ventas indicando si son nacionales o internacionales.
- * @return {json}: Respuesta JSON de la función que retorna el resultado del mapeo de rut nacionales e internacionales, incluye respuesta satisfactoria o fallo.
+ * @return {json}: Respuesta JSON de la función que retorna el resultado de la actualización del campo international de las ventas, si falla retorna excepción.
  */
 module.exports.updateDataVentasInternacionales = async (internationalSales) => {
 
     try {
 
+        /** AGRUPAR VENTAS POR CAMPO INTERNATIONAL. */
         let groups = groupBy(internationalSales , 'INTERNATIONAL');
 
         /** CREAR CONEXIÓN A BASE DE DATOS MYSQL. */
-        // let valida = await conexion.validarConexionFinanzas();
-        // if (valida.length > 0) throw valida;
-        // const pool = new sql.ConnectionPool(conexion.configFinanzas);
-        // const poolConnect = pool.connect();
+        let valida = await mySQL.validarConexionFinanzas();
+        if (valida.length > 0) throw valida;
+        const pool = new sql.ConnectionPool(mySQL.configFinanzas);
+        const poolConnect = pool.connect();
 
+        let cont = 0;
+
+        /** ITERAR GRUPOS. */
         for (const group of Object.keys(groups)) {
 
-            let result = await queryGenerator.divideScript(groups[group]);
+            /** ITERAR GRUPO Y LOS SUBAGRUPA EN BLOQUES DE 15000 PARA EVITAR QUE LA QUERY COLPASE EN EL WHERE IN (). */
+            let result = await queryGenerator.divideScriptByRut(groups[group]);
 
-            result.forEach(sRuts => {
+            /** ITERAR SUBGRUPOS. */
+            result.forEach(async sRuts => {
+
+                cont = cont + sRuts.length;
+
+                /** DECLARAR QUERY. */
                 let query = `UPDATE sales SET international = ${group} WHERE RUT IN (${sRuts}) AND folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND quantity > 0 AND (closeout_number IS NULL OR closeout_number = 0) AND origin = 'SVL' AND (international = -1 OR international IS NULL)`;
-                // await poolConnect;
-                // const request = pool.request();
-                // const RESULT = await request.query(query);
+                console.log(query);
+
+                /** EJECUTAR CONSULTA SQL. */
+                await poolConnect;
+                const request = pool.request();
+                const resultSQL = await request.query(query);
             });
 
         };
 
-        // Cerrar pool de conexión.
-        // pool.close();
+        /** CERRAR POOL DE CONEXIÓN. */
+        if (Object.keys(groups).length > 0)
+            pool.close();
 
         /** RETORNO RESPUESTA. */
-        return { TOTAL_GRUPOS: Object.keys(groups).length, TOTAL_SUBGRUPOS: cont};
+        return { TOTAL_GRUPOS: Object.keys(groups).length, TOTAL_RUTS: cont};
 
     } catch (error) {
 
-        /** RETORNO RESPUESTA. */
+        /** CAPTURA ERROR. */
         console.log(error);
         return error;
 

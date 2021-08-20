@@ -2,10 +2,10 @@
 
 /** VARIABLE QUE CONFIGURA LAS VARIABLES DE CONEXIÓN. */
 let configFinanzas = {
-    server: process.env.DB_DEV_HOST_FINANCES_HOST,
-    database: process.env.DB_DEV_HOST_FINANCES_DBNAME,
-    user: process.env.DB_DEV_HOST_FINANCES_USER,
-    password: process.env.DB_DEV_HOST_FINANCES_PASSWORD,
+    server: process.env.DB_HOST_FINANCES_HOST,
+    database: process.env.DB_HOST_FINANCES_DBNAME,
+    user: process.env.DB_HOST_FINANCES_USER,
+    password: process.env.DB_HOST_FINANCES_PASSWORD,
     multipleStatements: true,
     requestTimeout: 180000,
     options: {

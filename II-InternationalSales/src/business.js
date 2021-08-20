@@ -25,7 +25,7 @@ module.exports.updateInternationalsales = async () => {
             return resultUpdateSales;
 
         /** RETORNO DE RESPUESTA EXITOSA. */
-        return { body: { message: 'Ventas actualizadas correctamente.', data: resultUpdateSales }};
+        return { body: { message: 'Ventas nacionales actualizadas correctamente.', data: resultUpdateSales }};
 
     } catch (error) {
 

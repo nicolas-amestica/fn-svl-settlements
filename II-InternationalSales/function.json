@@ -8,7 +8,7 @@
       "methods": [
         "get"
       ],
-      "route": "finances/settlement/internationalSales"
+      "route": "finances/settlement/updateInternationalSales"
     },
     {
       "type": "http",
