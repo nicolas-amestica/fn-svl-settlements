@@ -19,6 +19,13 @@ Debe tener conexión a la base de datos de finanzas y usuarios.
 El endpoint no contiene body.
 El endpoint tiene un params con clave 'code' y valor ''
 ```
+#### 3.- GET: {}/finances/settlement/finalReports:
+Generar reporte finales de la liquidación, estos son: folios pendientes, ventas liquidadas y sellers loquidados.
+Debe tener conexión a la base de datos de finanzas.
+```sh
+El endpoint no contiene body.
+El endpoint tiene un params con clave 'code' y valor ''
+```
 
 ## INSTALACIÓN
 ### Instalar las siguientes dependencias:
