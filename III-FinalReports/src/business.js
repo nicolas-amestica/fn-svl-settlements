@@ -10,34 +10,39 @@ module.exports.getDataFinalReport = async () => {
     try {
 
         /** OBTENER FOLIOS PENDIENTES DE FINANZAS. */
-        const getDataPending = await finalReport.getDataPending();
+        let getDataPending = await finalReport.getDataPending();
+        if (getDataPending.error !== undefined)
+            return getDataPending;
+
+        /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
+        getDataPending = await finalReport.exportToCSV(getDataPending);
         if (getDataPending.error !== undefined)
             return getDataPending;
 
         /** OBTENER VENTAS LIQUIDADAS DE FINANZAS. */
-        const getDataSales = await finalReport.getDataSales();
+        let getDataSales = await finalReport.getDataSales();
+        if (getDataSales.error !== undefined)
+            return getDataSales;
+
+        /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
+        getDataSales = await finalReport.exportToCSV(getDataSales);
         if (getDataSales.error !== undefined)
             return getDataSales;
 
         /** OBTENER SELLERS LIQUIDADOS DE FINANZAS. */
-        const getDataSellers = await finalReport.getDataSellers();
+        let getDataSellers = await finalReport.getDataSellers();
         if (getDataSellers.error !== undefined)
             return getDataSellers;
 
-        // /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-        const getExportFiles = await finalReport.exportToCSV({ getDataPending, getDataSales, getDataSellers });
-        if (getExportFiles.error !== undefined)
-            return getExportFiles;
-
-        /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-        const resultUploadFiles = await finalReport.uploadFileFromPath(getExportFiles)
-        if (resultUploadFiles === undefined)
-            return resultUploadFiles;
+        /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
+        getDataSellers = await finalReport.exportToCSV(getDataSellers);
+        if (getDataSellers.error !== undefined)
+            return getDataSellers;
 
         /** ENVIAR EMAIL. */
-        // const resultSendEmail = await finalReport.sendEmail(resultUploadFile.url)
-        // if (resultSendEmail.error !== undefined)
-        //     return resultSendEmail;
+        const resultSendEmail = await finalReport.sendEmail({ getDataPending, getDataSales, getDataSellers })
+        if (resultSendEmail.error !== undefined)
+            return resultSendEmail;
 
         /** ELIMINAR ARCHIVO CSV DE CARPETA TEMPORAL. */
         const resultDeleteFile = await finalReport.deleteFile()
@@ -45,7 +50,7 @@ module.exports.getDataFinalReport = async () => {
             throw resultDeleteFile;
 
         /** RETORNO DE RESPUESTA EXITOSA. */
-        return { body: { message: 'Reportes generado correctamente.', data: resultUploadFiles }};
+        return { body: { message: 'Reportes generados correctamente.', data: { getDataPending, getDataSales, getDataSellers } }};
 
     } catch (error) {
 

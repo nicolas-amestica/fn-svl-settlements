@@ -5,10 +5,12 @@ const mySQL = require('../../../common/mySQL');
 const fileManager = require('../../../common/fileManager');
 const dateFormat = require('dateformat');
 const blobStorage = require('../../../common/blobStorage');
+const email = require('../../../common/email');
+const path = require('path');
 
 /**
- * Obtiene los folios pendientes, ventas liquidadas y sellers liquidados de finanzas.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Obtiene los folios pendientes de finanzas.
+ * @return {Json}: Retorna data y nombre en un objeto, si falla retorna excepción.
  */
 module.exports.getDataPending = async () => {
 
@@ -88,8 +90,8 @@ module.exports.getDataPending = async () => {
 };
 
 /**
- * Obtiene los folios pendientes, ventas liquidadas y sellers liquidados de finanzas.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Obtiene las ventas liquidadas de finanzas.
+ * @return {Json}: Retorna data y nombre en un objeto, si falla retorna excepción.
  */
 module.exports.getDataSales = async () => {
 
@@ -177,8 +179,9 @@ module.exports.getDataSales = async () => {
             WHERE
                 1 = 1
                 AND clo.origin = 'SVL'
-                AND clo.term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
-            `;
+                AND clo.term = '2021-08-20'
+        `;
+        // AND clo.term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
         const data = await pool.request().query(query);
@@ -202,8 +205,8 @@ module.exports.getDataSales = async () => {
 };
 
 /**
- * Obtiene los folios pendientes, ventas liquidadas y sellers liquidados de finanzas.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Obtiene los sellers liquidados de finanzas.
+ * @return {Json}: Retorna data y nombre en un objeto, si falla retorna excepción.
  */
 module.exports.getDataSellers = async () => {
 
@@ -234,8 +237,9 @@ module.exports.getDataSellers = async () => {
             FROM
                 closeouts
             WHERE
-                term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
-            `;
+                term = '2021-08-20'
+        `;
+        // term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
         const data = await pool.request().query(query);
@@ -259,17 +263,13 @@ module.exports.getDataSellers = async () => {
 };
 
 /**
- * Exportar los datos de finanzas a un archivo csv. Este es almacenado en la carpeta temporal tmp ubicada en la raíz del proyecto.
- * @param {[Json]} data: Arreglo de objetos.
- * @param {String} fileName: Nombre del archivo a generar.
- * @return {[Json]}: Retorna arreglo con nombres de los archivos creados, si falla retorna excepción.
+ * Exportar y subir archivo de finanzas a un Blob Storage. Antes de subir el archivo al blob storage, éste es almacenado en la carpeta temporal tmp ubicada en la raíz del proyecto.
+ * @param {Json} data: Objeto que contiene propiedades data y name.
+ * @return {[Json]}: Retorna arreglo con nombres de los archivos creados (incluyento url), si falla retorna excepción.
  */
 module.exports.exportToCSV = async (data) => {
 
     try {
-
-        /** VARIABLE QUE ALMACENA LOS NOMBRES DE LOS ARCHIVOS EXPORTADOS. */
-        let arrFileName = [];
 
         /** VALIDAR QUE LA VARIABLE DATA TENGA CONTENIDO. */
         if (Object.keys(data).length == 0)
@@ -280,16 +280,18 @@ module.exports.exportToCSV = async (data) => {
         if (!fs.existsSync(dir))
             fs.mkdirSync(dir);
 
-        /** ITERAR NOMBRES DE ARCHIVOS PARA QUE PUEDAN SER EXPORTADOS A CSV. */
-        for (const report of Object.keys(data)) {
-            arrFileName.push(`${data[report].name}.csv`);
-            let resp = await fileManager.exportDataToCSV(data[report].data, data[report].name);
-            if (!resp)
-                return { status: 401, body: { message: 'No se pudo exportar los archivos.' }, error: {} };
-        }
+        /** ITERAR ARCHIVO PARA QUE PUEDA SER EXPORTADO A CSV. */
+        data = await fileManager.exportDataToCSV(data.data, data.name);
+        if (data.error)
+            return { status: 401, body: { message: 'No se pudo exportar los archivos.', detalle: data.error }, error: {} };
+
+        /** SUBE ARCHIVO ALMACENADO EN CARPETA TEMPORAL AL BLOB STORAGE. */
+        data = await this.uploadFileFromPath(data.name);
+        if (data.error)
+            return { status: 401, body: { message: 'No se pudo subir el archivo.', detalle: data.error }, error: {} };
 
         /** RETORNO RESPUESTA. */
-        return arrFileName;
+        return data;
 
     } catch (error) {
 
@@ -303,31 +305,86 @@ module.exports.exportToCSV = async (data) => {
 
 /**
  * Subir archivo a Azure Blob Storage.
- * @param {String} fileNames: Arreglo de nombres de archivos.
+ * @param {String} fileName: Arreglo de nombres de archivos.
  * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
  */
- module.exports.uploadFileFromPath = async (fileNames) => {
+module.exports.uploadFileFromPath = async (fileName) => {
 
     try {
 
-        let URLs = [];
-
-        for (const fileName of fileNames) {
-            let result = await blobStorage.uploadFileFromLocal('reports', fileName, `${process.env.TMP_FOLDER}${fileName}`);
-            if (!result)
-                return { status: 401, body: { error: 'No se pudo subir archivos a blob storage' }, error: {} };
-
-            URLs.push(result)
-        }
+        let result = await blobStorage.uploadFileFromLocal('reports', fileName, `${process.env.TMP_FOLDER}${fileName}`);
+        if (!result)
+            return { status: 401, body: { error: 'No se pudo subir archivos a blob storage' }, error: {} };
 
         /** RETORNO RESPUESTA. */
-        return URLs;
+        return result;
 
     } catch (error) {
 
         /** CAPTURA ERROR. */
         console.log(error);
         return { status: 400, body: { error: 'No se pudieron subir los archivos.', detalle: error }, error: {} };
+
+    }
+
+}
+
+/**
+ * Función que envía email según los parámetros que se configuren.
+ * @param {[Json]} urlFiles: Arreglo de objeto con los datos (incluyendo la url) subidos al Blob Storage.
+ * @return {Json}: Respuesta JSON de la función que retorna el resultado del envío del email, incluye respuesta satisfactoria o fallo.
+ */
+module.exports.sendEmail = async (urlFiles) => {
+
+    try {
+
+        let urlTag = [];
+
+        /** VALIDA QUE EL PARÁMETRO DE ENTRADA TENGA CONTENIDO. */
+        if (Object.keys(urlFiles).length == 0)
+            return { status: 401, body: { message: 'No se pudo enviar el email.', detalle: 'No se ha podido obtener la url del archivo.' }, error: {} };
+
+        /** ITERAR ARREGLO DE OBJETO AGREGANDO URL Y NOMBRE A LA VARIABLE URLTAG. */
+        for (const file of Object.keys(urlFiles)) {
+            urlTag.push({url: urlFiles[file].url, name: (path.basename(urlFiles[file].url, '.csv')).toUpperCase() })
+        }
+
+        /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        let configEmail = {
+            from: process.env.GMAIL_AUTH_USER,
+            to: process.env.SENDGRID_MAIL_TO,
+            cc: process.env.SENDGRID_MAIL_CC,
+            bcc: process.env.SENDGRID_MAIL_BCC,
+            subject: `PROCESO LIQUIDACIÓN ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+            template: 'settlement',
+            context: {
+                dear: 'Estimados,',
+                message: 'Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:',
+                urlTag: urlTag,
+                greeting: 'Atte.',
+                sender: 'Nicolás Améstica Vidal'
+            }
+        }
+
+        /** CONFIGURAR PARÁMETROS DE HBS. */
+        const optionsHBS = {
+            partialsDir: 'shared/views/email',
+            viewPath: '../shared/views/email'
+        }
+
+        /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        let result = await email.sendFromGmail(configEmail, optionsHBS);
+        if (result.errno)
+            return { status: 201, body: { message: 'No se pudo enviar el email.', detalle: result }};
+
+        /** RETORNO RESPUESTA. */
+        return result;
+
+    } catch (error) {
+
+        /** CAPTURA ERROR. */
+        console.log(error);
+        return { status: 400, body: { error: 'No se pudo enviar el mail.', detalle: error }, error: {} };
 
     }
 
@@ -350,34 +407,7 @@ module.exports.deleteFile = async () => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return { status: 400, body: { error: 'No se pudo seguir validando los folios.', detalle: error }, error: {} };
-
-    }
-
-}
-
-/**
- * Eliminar el archivo csv ubicado en carpeta temporal.
- * @param {String} filePath: Ruta del archivo que está en carpeta temporal.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
- */
-module.exports.sendMail = async () => {
-
-    try {
-
-        /** ELIMINAR ARCHIVO DE CARPETA TEMPORALES. */
-        let result = await sendGrid.send();
-        if (result.errors)
-            return { status: 401, body: { error: 'Imposible enviar mail.' }, error: {} };
-
-        /** RETORNO RESPUESTA. */
-        return result;
-
-    } catch (error) {
-
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo enviar el mail.', detalle: error }, error: {} };
+        return { status: 400, body: { error: `No se pudo eliminar el directorio ${process.env.TMP_FOLDER}.`, detalle: error }, error: {} };
 
     }
 

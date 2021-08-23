@@ -160,19 +160,26 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
 
 /**
  * Función que envía email según los parámetros que se configuren.
- * @param {String} urlFile: URL del archivo subido a Blob Storage.
+ * @param {[Json]} urlFiles: Arreglo de objeto con los datos (incluyendo la url) subidos al Blob Storage.
  * @return {Json}: Respuesta JSON de la función que retorna el resultado del envío del email, incluye respuesta satisfactoria o fallo.
  */
- module.exports.sendEmail = async (urlFile) => {
+module.exports.sendEmail = async (urlFiles) => {
 
     try {
 
+        let urlTag = [];
+
         /** VALIDA QUE EL PARÁMETRO DE ENTRADA TENGA CONTENIDO. */
-        if (urlFile.length == 0)
-            return { status: 201, body: { message: 'No se pudo enviar el email.', detalle: 'No se ha podido obtener la url del archivo.' }};
+        if (Object.keys(urlFiles).length == 0)
+            return { status: 401, body: { message: 'No se pudo enviar el email.', detalle: 'No se ha podido obtener la url del archivo.' }, error: {} };
+
+        /** ITERAR ARREGLO DE OBJETO AGREGANDO URL Y NOMBRE A LA VARIABLE URLTAG. */
+        for (const file of Object.keys(urlFiles)) {
+            urlTag.push({url: urlFiles[file].url, name: (path.basename(urlFiles[file].url, '.xlsx')).toUpperCase() })
+        }
 
         /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        const configEmail = {
+        let configEmail = {
             from: process.env.GMAIL_AUTH_USER,
             to: process.env.SENDGRID_MAIL_TO,
             cc: process.env.SENDGRID_MAIL_CC,
@@ -181,9 +188,8 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
             template: 'settlement',
             context: {
                 dear: 'Estimados,',
-                message: 'Se adjunta enlace con primer informe denominado InformeSKU de la liquidación:',
-                url: urlFile,
-                nameURL: 'INFORME_SKU',
+                message: 'Se inicia proceso liquidación adjuntanto el informe inicial denominado InformeSKU:',
+                urlTag: urlTag,
                 greeting: 'Atte.',
                 sender: 'Nicolás Améstica Vidal'
             }
@@ -215,26 +221,22 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
 
 /**
  * Eliminar el archivo csv ubicado en carpeta temporal.
- * @param {String} filePath: Ruta del archivo que está en carpeta temporal.
  * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
- module.exports.deleteFile = async (filePath) => {
+module.exports.deleteFile = async () => {
 
     try {
 
-        /** ELIMINAR ARCHIVO DE CARPETA TEMPORALES. */
-        let result = await fileManager.deleteFile(filePath);
-        if (result.error)
-            return { status: 201, body: { error: 'Imposible eliminar archivo.' }, error: {} };
+        /** ELIMINAR CARPETA TEMPORALES. */
+        fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });
 
-        /** RETORNO RESPUESTA. */
-        return result;
+        return true;
 
     } catch (error) {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return { status: 400, body: { error: 'No se pudo seguir validando los folios.', detalle: error }, error: {} };
+        return { status: 400, body: { error: `No se pudo eliminar el directorio ${process.env.TMP_FOLDER}.`, detalle: error }, error: {} };
 
     }
 

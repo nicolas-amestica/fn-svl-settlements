@@ -9,7 +9,11 @@
 <body>
     <p>{{dear}}</p>
     <p>{{message}}</p>
-    <p><a href="{{url}}">{{nameURL}}</a></p>
+    <p>
+    {{#urlTag}}
+        <a href="{{url}}">{{name}}</a><br>
+    {{/urlTag}}
+    </p>
     <br>
     {{greeting}}
     <br>
