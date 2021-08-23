@@ -7,6 +7,8 @@ Específicamente, genera un reporte de todos los folios que cumplan, parcialment
 de todas las ventas que se liquidaron el mismo día que se ejecuta la liquidación (ya que lo genera por fecha actual) y por último, genera
 un reporte de los seller que fueron liquidados el mismo día que se ejecuta el endpoind.
 
+Finalmente, sube los reportes a un blob storage y envía email con enlaces para la descarga.
+
 ##### Utilización:
 ```sh
     El endpoint no contiene body.
