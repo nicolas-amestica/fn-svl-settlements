@@ -2,7 +2,7 @@
 const finalReport = require('./management/getFinalReports');
 
 /**
- * Genera reporte de folios pendientes por liquidar.
+ * Genera reporte csv de folios pendientes por liquidar, ventas liouidadas y sellers liquidados, para luego subirlos a un blob storage y enviar enlaces vía email.
  * @return {json}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
 module.exports.getDataFinalReport = async () => {
@@ -39,12 +39,12 @@ module.exports.getDataFinalReport = async () => {
         if (getDataSellers.error !== undefined)
             return getDataSellers;
 
-        /** ENVIAR EMAIL. */
+        /** ENVIAR EMAIL CON ENLACES DE DESCARGAS DE LOS ARCHIVOS. */
         const resultSendEmail = await finalReport.sendEmail({ getDataPending, getDataSales, getDataSellers })
         if (resultSendEmail.error !== undefined)
             return resultSendEmail;
 
-        /** ELIMINAR ARCHIVO CSV DE CARPETA TEMPORAL. */
+        /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
         const resultDeleteFile = await finalReport.deleteFile()
         if (resultDeleteFile.error !== undefined)
             throw resultDeleteFile;

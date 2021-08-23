@@ -2,7 +2,7 @@
 const initialReport = require('./management/getInitialReport');
 
 /**
- * Genera, subir a Azure Storage y enviar por email reporte denominado informe sku.
+ * Genera csv, sube a blob storage y envía email con el enlace de descarga del reporte generado.
  * @return {json}: Respuesta JSON que retorna la respuesta del proceso completo, si falla retorna excepción.
  */
 module.exports.getReport = async () => {
@@ -24,12 +24,12 @@ module.exports.getReport = async () => {
         if (resultUploadFile.error !== undefined || resultUploadFile.warn !== undefined)
             return resultUploadFile;
 
-        /** ENVIAR EMAIL. */
+        /** ENVIAR EMAIL CON ENLACE DE DESCARGA DEL ARCHIVO. */
         const resultSendEmail = await initialReport.sendEmail({ resultUploadFile })
         if (resultSendEmail.error !== undefined)
             return resultSendEmail;
 
-        /** ELIMINAR ARCHIVO CSV DE CARPETA TEMPORAL. */
+        /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
         const resultDeleteFile = await initialReport.deleteFile()
         if (resultDeleteFile.error !== undefined)
             return resultDeleteFile;
