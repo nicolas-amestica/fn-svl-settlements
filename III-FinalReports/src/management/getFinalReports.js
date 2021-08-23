@@ -179,9 +179,8 @@ module.exports.getDataSales = async () => {
             WHERE
                 1 = 1
                 AND clo.origin = 'SVL'
-                AND clo.term = '2021-08-20'
+                AND clo.term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
         `;
-        // AND clo.term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
         const data = await pool.request().query(query);
@@ -237,9 +236,8 @@ module.exports.getDataSellers = async () => {
             FROM
                 closeouts
             WHERE
-                term = '2021-08-20'
+                term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
         `;
-        // term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
         const data = await pool.request().query(query);
