@@ -56,7 +56,6 @@ module.exports.getDataFinalReport = async () => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        // fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });
         return error;
 
     }
