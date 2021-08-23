@@ -10,5 +10,5 @@ un reporte de los seller que fueron liquidados el mismo día que se ejecuta el e
 ##### Utilización:
 ```sh
     El endpoint no contiene body.
-    El endpoint tiene un params con clave code y valor inKElCWs2FRmbCnqdRAar7e1TRJEm5hgzXoLZeIJZfHgXUa440bGjQ==
+    El endpoint tiene un params con clave 'code' y valor ''
 ```
