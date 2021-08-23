@@ -220,8 +220,8 @@ module.exports.sendEmail = async (urlFiles) => {
 }
 
 /**
- * Eliminar el archivo csv ubicado en carpeta temporal.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Eliminar directorio de carpeta temporal.
+ * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
 module.exports.deleteFile = async () => {
 
