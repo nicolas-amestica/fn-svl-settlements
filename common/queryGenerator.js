@@ -3,7 +3,7 @@
 /**
  * Función que procesa arreglo de objetos de un elemento y concatena en un string para utilizarlo en una consulta SQL.
  * @param {[Json]} data: Arreglo de objetos de un elemento.
- * @return {json}: Respuesta JSON de la función que retorna el resultado de la concatenación del elemento de arreglo de objeto.
+ * @return {String}: Retorna string con información unida y cada elemento separado por comillas simples y comas.
  */
 module.exports.inQueryGenerator = async (data) => {
 
@@ -32,7 +32,7 @@ module.exports.inQueryGenerator = async (data) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error;
+        return { error };
 
     }
 
@@ -41,7 +41,7 @@ module.exports.inQueryGenerator = async (data) => {
 /**
  * Función que procesa arreglo simple de string y concatena en un string para utilizarlo en una consulta SQL.
  * @param {[String]} data: Arreglo de string.
- * @return {json}: Respuesta JSON de la función que retorna el resultado de la concatenación del arreglo devolviendo un string para SQL.
+ * @return {String}: Retorna string con información unida y cada elemento separado por comillas simples y comas.
  */
 module.exports.inQueryGeneratorString = async (data) => {
 
@@ -60,7 +60,7 @@ module.exports.inQueryGeneratorString = async (data) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error;
+        return { error }
 
     }
 
@@ -68,7 +68,7 @@ module.exports.inQueryGeneratorString = async (data) => {
 
 /**
  * Función que procesa arreglo de objeto, lo separa en bloques, cada bloque concatena los ruts en un string para utilizarlo en una consulta SQL.
- * @param {[String]} data: Arreglo de string.
+ * @param {[Json]} salesGroup: Arreglo de objetos con información en donde una de las propiedades debe ser rut.
  * @return {json}: Retorna arreglo de bloques con rut listos para utilizarlos en una consulta SQL.
  */
 module.exports.divideScriptByRut = async (salesGroup) => {
@@ -104,7 +104,7 @@ module.exports.divideScriptByRut = async (salesGroup) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error
+        return { error }
 
     }
 

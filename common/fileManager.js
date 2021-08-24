@@ -4,15 +4,15 @@ const ObjectsToCsv = require('objects-to-csv-file');
 const XLSX = require('xlsx')
 
 /**
- * Eliminar el archivo csv ubicado en carpeta temporal.
- * @param {String} filePath: Ruta del archivo que está en carpeta temporal.
+ * Eliminar el archivo csv ubicado en la ruta que se indique.
+ * @param {String} filePath: Ruta del archivo.
  * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
 module.exports.deleteFile = async (filePath) => {
 
     try {
 
-        /** FUNCIÓN QUE ELIMINA UN ARCHIVO A BASE DE UNA URL. */
+        /** FUNCIÓN QUE ELIMINA UN ARCHIVO. */
         await fs.unlink(filePath);
 
         /** RETORNA RESPUESTA. */
@@ -22,17 +22,43 @@ module.exports.deleteFile = async (filePath) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error;
+        return { error };
 
     }
 
 };
 
 /**
- * Exportar datos a un archivo csv. Este es almacenado en la carpeta temporal tmp ubicada en la raíz del proyecto.
- * @param {[Json]} data: Arreglo de objetos.
- * @param {String} fileName: Nombre del archivo a generar.
- * @return {[Json]}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Eliminar directorio.
+ * @param {String} folderPath: Ruta del directorio.
+ * @param {Json} recursive: Json con variable recursive de tipo boolean que indica si es recursivo o no.
+ * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ */
+module.exports.deleteFolder = async (folderPath, recursive) => {
+
+    try {
+
+        /** FUNCIÓN QUE ELIMINA EL DIRECTORIO INDICADO SI ES RECURSIVO. */
+        await fs.rmdir(folderPath, recursive);
+
+        /** RETORNA RESPUESTA. */
+        return true;
+
+    } catch (error) {
+
+        /** CAPTURA ERROR. */
+        console.log(error);
+        return { error };
+
+    }
+
+};
+
+/**
+ * Exportar datos a un archivo csv.
+ * @param {Json} data: Objeto que contiene la data a exportar.
+ * @param {String} fileName: Nombre del archivo que se quiere generar.
+ * @return {Json}: Retorna objeto JSON con nombre del archivo y ruta, si falla retorna expceción.
  */
 module.exports.exportDataToCSV = async (data, fileName) => {
 
@@ -52,13 +78,13 @@ module.exports.exportDataToCSV = async (data, fileName) => {
             throw 'No se pudo generar el archivo CSV.';
 
         /** RETORNA RESPUESTA. */
-        return { name: `${fileName}.csv`, path: fullPathFile, result };
+        return { name: `${fileName}.csv`, path: fullPathFile };
 
     } catch (error) {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error;
+        return { error };
 
     }
 
@@ -70,7 +96,7 @@ module.exports.exportDataToCSV = async (data, fileName) => {
  * @param {String} fileName: Nombre del archivo a generar.
  * @return {String}: Respuesta String que indica la ruta y nombre del archivo que se generó, si falla envía una expceción.
  */
- module.exports.exportToXlsxFromObject = async (data, fileName) => {
+module.exports.exportToXlsxFromObject = async (data, fileName) => {
 
     try {
 
@@ -93,7 +119,7 @@ module.exports.exportDataToCSV = async (data, fileName) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error;
+        return { error };
 
     }
 

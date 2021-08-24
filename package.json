@@ -9,6 +9,7 @@
   "author": "Nicolás Améstica Vidal",
   "dependencies": {
     "@azure/storage-blob": "^12.7.0",
+    "@google-cloud/bigquery": "^5.8.0",
     "@sendgrid/mail": "^7.4.6",
     "dateformat": "^4.5.1",
     "lodash.groupby": "^4.6.0",

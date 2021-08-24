@@ -12,7 +12,6 @@ module.exports.sendFromSendgrid = async () => {
 
     /**   ************* EN CONSTRUCCIÓN *************  */
 
-
     try {
 
         const URL1 = '';
@@ -96,7 +95,7 @@ module.exports.sendFromGmail = async (mailOpt, hbsOpt) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return error
+        return { error }
 
     }
 

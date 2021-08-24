@@ -8,7 +8,7 @@ El objetivo es identificar los folios que deben ser liquidados dado que solo se 
 ## Utilización:
 Las características del endpoint son las siguientes:
 ### GET: {}/finances/settlement/updateInternationalSales:
-Actualizar el campo international de las ventas de finanzas.
+Identificar si las ventas pendientes de liquidar corresponden a ventas nacionales o internacionales.
 Debe tener conexión a la base de datos de finanzas y usuarios.
 ```sh
 El endpoint no contiene body.

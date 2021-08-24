@@ -7,8 +7,15 @@
 El proyecto contiene los siguientes endpoints:
 
 #### II.- GET: {host}/finances/settlement/updateInternationalSales:
-Actualizar el campo international de las ventas de finanzas.
+Identificar si las ventas pendientes de liquidar corresponden a ventas nacionales o internacionales.
 Debe tener conexión a la base de datos de finanzas y usuarios.
+```sh
+El endpoint no contiene body.
+El endpoint tiene un params con clave 'code' y valor ''
+```
+#### III.- GET: {host}/finances/settlement/SvlPrincipal:
+Generar un update a bigquery con informacióm obtenida de finanzas.
+Debe tener conexión a la base de datos de finanzas y BigQuery.
 ```sh
 El endpoint no contiene body.
 El endpoint tiene un params con clave 'code' y valor ''
