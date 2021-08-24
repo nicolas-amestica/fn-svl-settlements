@@ -1,4 +1,4 @@
-# Actualizar data con GibQuery
+# Actualizar data con BigQuery
 
 ## Objetivo:
 
