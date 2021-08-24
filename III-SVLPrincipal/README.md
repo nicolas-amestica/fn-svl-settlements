@@ -2,7 +2,8 @@
 
 ## Objetivo:
 
-### Generar un update a bigquery con informacióm obtenida de finanzas. Esta información son folios con su respectivo sku, fullfilment_type y category.
+### Generar un update a bigquery con informacióm obtenida de finanzas.
+La información son folios con su respectivo sku, fullfilment_type y category.
 Además, los folios son todos los que no han sido liquidados y con el campo cantidad mayor a 1.
 
 ## Utilización:
