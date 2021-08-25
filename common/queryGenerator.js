@@ -111,10 +111,10 @@ module.exports.divideScriptByRut = async (salesGroup) => {
 }
 
 /**
- * Función que procesa arreglo de objeto, lo separa en bloques, cada bloque concatena los ruts en un string para utilizarlo en una consulta SQL.
- * @param {[Json]} data: Arreglo de objetos con información en donde una de las propiedades debe ser rut.
- * @param {Number} longitud: Arreglo de objetos con información en donde una de las propiedades debe ser rut.
- * @return {[json]}: Retorna arreglo de bloques con rut listos para utilizarlos en una consulta SQL.
+ * Función que itera un arreglo de objetos y devuelve bloques de acuerdo al maxímo indicado.
+ * @param {[Json]} data: Arreglo de objetos con información.
+ * @param {Integer} longitud: Variable que indica el límite de cada bloque.
+ * @return {[json]}: Retorna arreglo de bloques.
  */
 module.exports.divideScriptByGroup = async (data, longitud) => {
 
