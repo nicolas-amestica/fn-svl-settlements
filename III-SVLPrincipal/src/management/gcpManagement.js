@@ -133,7 +133,7 @@ module.exports.updateGCP = async (filePath) => {
         /** EJECUTAR BIGQUERY, SE ENVÍAN PARÀMETROS PARA POSTERIOR CONFIGURACIÓN DEL SERVICIO. */
         let data = await gcp.insertDataFromLocalFile(options);
         if (data.error)
-            return { status: 400, body: { message: 'No se ejecutar bigquery.', detalle: data.error }, error: {} };
+            return { status: 400, body: { message: 'No se pudo ejecutar bigquery.', detalle: data.error }, error: {} };
 
         /** RETORNO RESPUESTA. */
         return data;
@@ -142,7 +142,7 @@ module.exports.updateGCP = async (filePath) => {
 
         /** CAPTURA ERROR. */
         console.log(error);
-        return { status: 400, body: { error: 'No se ejecutar bigquery.', detalle: error }, error: {} };
+        return { status: 400, body: { message: 'No se pudo ejecutar bigquery.', detalle: data.error }, error: {} };
 
     }
 

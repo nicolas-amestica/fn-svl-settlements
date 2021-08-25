@@ -1,6 +1,5 @@
 'use-strinct'
 const { BigQuery } = require('@google-cloud/bigquery');
-const bigquery = new BigQuery();
 
 /**
  * Insertar datos a bigquery.
@@ -11,6 +10,11 @@ module.exports.insertDataFromLocalFile = async (options) => {
 
     try {
 
+        const bigquery = new BigQuery({ credentials: {
+            private_key: process.env.private_key,
+            client_email: process.env.client_email
+        }});
+
         /** CONFIGURAR METADATA PARA BIGQUEY. */
         const metadata = {
             sourceFormat: options.formatFile,
@@ -20,6 +24,7 @@ module.exports.insertDataFromLocalFile = async (options) => {
             },
             location: 'US',
             writeDisposition: options.type, /** WRITE_APPEND|WRITE_TRUNCATE */
+            fieldDelimiter: ';'
         };
 
         /** EJECUTAR BIGQUEY. */
@@ -28,8 +33,10 @@ module.exports.insertDataFromLocalFile = async (options) => {
             .table(options.table)
             .load(options.filePath, metadata);
 
+        delete job.statistics.load.timeline;
+        
         /** RETORNA RESPUESTA. */
-        return job;
+        return job.statistics.load;
 
     } catch (error) {
 

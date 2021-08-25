@@ -20,9 +20,9 @@ module.exports.svlPrincipal = async () => {
             return data;
 
         /** INSERTAR DATA DE ARCHIVO CSV A BIGQUERY. */
-        // data = await gcp.updateGCP(data.path);
-        // if (data.error !== undefined)
-        //     return data;
+        data = await gcp.updateGCP(data.path);
+        if (data.error !== undefined)
+            return data;
 
         /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
         const deleteFolder = await gcp.deleteFolder()
@@ -30,7 +30,7 @@ module.exports.svlPrincipal = async () => {
             return deleteFolder;
 
         /** RETORNO DE RESPUESTA EXITOSA. */
-        return { body: { message: 'Archivo insertado a BigQuery correctamente.', data }};
+        return { body: { message: 'Registros ingresados a BigQuery correctamente.', data: { "Total registros": data.outputRows, detalle: data } }};
 
     } catch (error) {
 
