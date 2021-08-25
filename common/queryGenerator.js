@@ -109,3 +109,37 @@ module.exports.divideScriptByRut = async (salesGroup) => {
     }
 
 }
+
+/**
+ * Función que procesa arreglo de objeto, lo separa en bloques, cada bloque concatena los ruts en un string para utilizarlo en una consulta SQL.
+ * @param {[Json]} data: Arreglo de objetos con información en donde una de las propiedades debe ser rut.
+ * @param {Number} longitud: Arreglo de objetos con información en donde una de las propiedades debe ser rut.
+ * @return {[json]}: Retorna arreglo de bloques con rut listos para utilizarlos en una consulta SQL.
+ */
+module.exports.divideScriptByGroup = async (data, longitud) => {
+
+    try {
+
+        /** DECLARAR VARIABLE QUE ALMACENA CADENA DE STRING Y BLOQUES. */
+        let bloques = [];
+
+        /** DIVIDIR EN GRUPOS EL OBJETO JSON EN PARTES QUE SE INDIQUEN. */
+        for (let i = 0; i < data.length; i += longitud) { /** INDICA LA CANTIDAD TOTAL QUE TENDRÁN LOS BLOQUES. */
+            /** INDICA LOS LIMITES DEL GRUPO. */
+            let pedazo = data.slice(i, i + longitud);
+            /** AGREGA GRUPO A VARIABLE BLOQUE. */
+            bloques.push(pedazo);
+        }
+
+        /** RETORNO RESPUESTA. */
+        return bloques;
+
+    } catch (error) {
+
+        /** CAPTURA ERROR. */
+        console.log(error);
+        return { error }
+
+    }
+
+}
