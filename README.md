@@ -5,7 +5,13 @@
 - Nodejs v14.17.3
 ### Endpoints:
 El proyecto contiene los siguientes endpoints:
-
+#### I.- GET: {host}/finances/settlement/skuUpdater:
+Insertar sku, category, name, seller_sku y facility de la base de datos de productos en tabla skus de la base de datos de finanzas.
+Debe tener conexión a la base de datos de productos y finanzas.
+```sh
+El endpoint no contiene body.
+El endpoint tiene un params con clave 'code' y valor ''
+```
 #### II.- GET: {host}/finances/settlement/updateInternationalSales:
 Identificar si las ventas pendientes de liquidar corresponden a ventas nacionales o internacionales.
 Debe tener conexión a la base de datos de finanzas y usuarios.
