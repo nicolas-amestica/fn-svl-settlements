@@ -1,82 +1,47 @@
 'use strict';
 const fs = require('fs');
-const sql = require("mssql");
-const mySQL = require('../../../common/mySQL');
 const fileManager = require('../../../common/fileManager');
 const dateFormat = require('dateformat');
 const blobStorage = require('../../../common/blobStorage');
 const email = require('../../../common/email');
+const gcp = require('../../../common/gcloud');
 const path = require("path");
 
 /**
- * Obtiene los folios desde la base de datos de finanzas.
+ * Obtiene los folios desde la base de datos de GCP mediante bigquery.
  * @return {[Json]}: Respuesta JSON que contiene data y name de folios pendientes y sin sku, si falla retorna excepción.
  */
-module.exports.getDataFinance = async () => {
+module.exports.getDataGcp = async () => {
 
     try {
 
-        /** CREAR CONEXIÓN A BASE DE DATOS mySQL. */
-        let valida = await mySQL.validarConexionFinanzas();
-        if (valida.length > 0) return { status: 400, body: { error: 'No se pudo validar la conexión a finanzas.' }, error: {} };
-        let pool = await sql.connect(mySQL.configFinanzas);
+        /** QUERYS. */
+        const queryPending = `SELECT CAST(folio AS STRING) as FOLIO, CASE fulfillment_type WHEN 'null' THEN null ELSE fulfillment_type END AS FULLFILMENT_TYPE FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas`;
+        const queryCategory = `SELECT CAST(folio AS STRING) AS FOLIO, CAST(sku AS STRING) AS SKU, CATEGORY FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas WHERE category = 'null' OR category IS NULL AND sku is not null AND sku != 0`;
 
-        /** QUERY. */
-        const queryPendientes = `
-            SELECT
-                folio AS FOLIO,
-                CASE fulfillment_type
-                    WHEN 'null'
-                    THEN null
-                    ELSE fulfillment_type
-                END AS FULFILLMENT_TYPE
-            FROM
-                sales
-            WHERE
-                origin = 'SVL'
-                AND folio NOT IN ('0', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10', '-11')
-                AND quantity > 0
-                AND (closeout_number = 0 OR closeout_number IS NULL)
-        `;
+        const pending_job = {
+            query: queryPending,
+            location: 'US',
+            preserveNulls: true
+        };
 
-        /** EJECUCIÓN DE QUERY. */
-        const dataPendientes = await pool.request().query(queryPendientes);
-        if (!dataPendientes)
-            return { status: 400, body: { error: 'No se pudo consultar los datos de finanzas.' }, error: {} };
+        const category_job = {
+            query: queryCategory,
+            location: 'US',
+            preserveNulls: true
+        };
 
-        const querySinCategoria = `
-            SELECT
-                folio AS FOLIO,
-                sku AS SKU,
-                category AS CATEGORY
-            FROM
-                sales
-            WHERE
-                origin = 'SVL'
-                AND folio NOT IN ('0', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10', '-11')
-                AND quantity > 0
-                AND (closeout_number = 0 OR closeout_number IS NULL)
-                AND category IS NULL
-        `;
-
-        /** EJECUCIÓN DE QUERY. */
-        const dataSinCategoria = await pool.request().query(querySinCategoria);
-        if (!dataSinCategoria)
-            return { status: 400, body: { error: 'No se pudo consultar los datos de finanzas.' }, error: {} };
-
-        /** CERRAR CONEXIÓN A SQL. */
-        sql.close();
+        const [pending] = await gcp.select(pending_job);
+        const [category] = await gcp.select(category_job);
 
         /** RETORNO RESPUESTA. */
-        return [
-                {
-                    name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
-                    data: dataPendientes.recordset
-                }, {
-                    name: `${process.env.N_SIN_CATEGORIA_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
-                    data: dataSinCategoria.recordset
-                }
-            ]
+        return [{
+            name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
+            data: pending
+        }, {
+            name: `${process.env.N_SIN_CATEGORIA_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
+            data: category
+        }]
 
     } catch (error) {
 

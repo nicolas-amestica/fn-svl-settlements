@@ -10,6 +10,7 @@ module.exports.insertDataFromLocalFile = async (options) => {
 
     try {
 
+        /** CONFIGURAR INSTANCIA DE BIGQUERY CON CREDENCIALES. */
         const bigquery = new BigQuery({ credentials: {
             private_key: process.env.private_key,
             client_email: process.env.client_email
@@ -37,6 +38,39 @@ module.exports.insertDataFromLocalFile = async (options) => {
         
         /** RETORNA RESPUESTA. */
         return job.statistics.load;
+
+    } catch (error) {
+
+        /** CAPTURA ERROR. */
+        console.log(error);
+        return { error };
+
+    }
+
+};
+
+/**
+ * Insertar datos a bigquery.
+ * @param {Json} options: Objeto que contiene la configuración de bigquery (incluye la query).
+ * @return {Json}: Retorna JSON con resultado del proceso de bigquery.
+ */
+module.exports.select = async (options) => {
+
+    try {
+
+        /** CONFIGURAR INSTANCIA DE BIGQUERY CON CREDENCIALES. */
+        const bigquery = new BigQuery({ credentials: {
+            private_key: process.env.private_key,
+            client_email: process.env.client_email
+        }});
+
+        /** CREAR QUERY JOB Y EJECUTAR CONSULTA. */
+        const response = await bigquery.createQueryJob(options);
+        const job = response[0];
+        const rows = await job.getQueryResults(job);
+        
+        /** RETORNA RESPUESTA. */
+        return [rows][0];
 
     } catch (error) {
 

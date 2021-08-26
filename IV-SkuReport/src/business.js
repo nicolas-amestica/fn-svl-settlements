@@ -9,18 +9,18 @@ module.exports.getReport = async () => {
 
     try {
 
-        /** OBTENER DATOS DE FINANZAS. */
-        let getDataFinance = await initialReport.getDataFinance();
-        if (getDataFinance.error !== undefined || getDataFinance.warn !== undefined)
-            return getDataFinance;
+        /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
+        let data = await initialReport.getDataGcp();
+        if (data.error !== undefined || data.warn !== undefined)
+            return data;
 
         /** EXPORTAR DATA A ARCHIVO XLSX. */
-        getDataFinance = await initialReport.exportToXlsxFromObject(getDataFinance, process.env.N_INFORME_SKU_FILE);
-        if (getDataFinance.error !== undefined || getDataFinance.warn !== undefined)
-            return getDataFinance;
+        data = await initialReport.exportToXlsxFromObject(data, process.env.N_INFORME_SKU_FILE);
+        if (data.error !== undefined || data.warn !== undefined)
+            return data;
 
         /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-        const resultUploadFile = await initialReport.uploadFileFromPath(getDataFinance)
+        const resultUploadFile = await initialReport.uploadFileFromPath(data)
         if (resultUploadFile.error !== undefined || resultUploadFile.warn !== undefined)
             return resultUploadFile;
 
@@ -35,7 +35,7 @@ module.exports.getReport = async () => {
             return resultDeleteFile;
 
         /** RETORNO DE RESPUESTA EXITOSA. */
-        return { body: { message: 'Reporte generado correctamente.', data: { resultUploadFile } }};
+        return { body: { message: 'Reporte generado y enviado por correo correctamente.', data: { resultUploadFile } }};
 
     } catch (error) {
 

@@ -2,7 +2,7 @@
 const gcp = require('./management/gcpManagement');
 
 /**
- * Genera archivo csv y vacía la data en bigquery.
+ * Genera archivo csv y vuelca la data de éste en GCP mediante un bigquery.
  * @return {json}: Respuesta JSON que retorna la respuesta del proceso completo, si falla retorna excepción.
  */
 module.exports.svlPrincipal = async () => {
