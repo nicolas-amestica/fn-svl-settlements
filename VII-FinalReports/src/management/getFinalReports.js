@@ -191,7 +191,7 @@ module.exports.getDataSales = async () => {
         sql.close();
 
         /** RETORNO RESPUESTA. */
-        return {name: `${process.env.N_SALES_FILE}_${dateFormat(new Date(), "yyyymmddHMM")}`, data: data.recordset }
+        return { name: `${process.env.N_SALES_FILE}_${dateFormat(new Date(), "yyyymmddHMM")}`, data: data.recordset }
 
     } catch (error) {
 
