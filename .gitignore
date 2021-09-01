@@ -25,6 +25,10 @@ local.settings.json
 node_modules/
 tmp/
 dist
+.vscode/
+.vscode
+vscode/
+vscode
 
 .DS_Store
 
