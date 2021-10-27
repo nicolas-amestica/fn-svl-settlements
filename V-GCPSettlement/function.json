@@ -8,7 +8,7 @@
       "methods": [
         "get"
       ],
-      "route": "finances/settlement/gcpSettlement"
+      "route": "finances/settlement/GeneraGCPReport"
     },
     {
       "type": "http",

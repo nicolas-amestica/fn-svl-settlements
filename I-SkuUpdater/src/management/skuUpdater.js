@@ -34,9 +34,14 @@ module.exports.getDataProducts = async () => {
                 P.svl_country_id = 45
                 AND P.business = 0
                 AND PV.sku IS NOT NULL
-                AND P.deleted_at IS NULL
-                AND P.created_at <= '${dateFormat(new Date(), "yyyy-mm-dd")}'
-                AND P.created_at >= '${dateFormat((new Date() - 86400000), "yyyy-mm-dd")}'
+                --AND P.deleted_at IS NULL
+                AND PV.sku IN (
+                    '7406840',
+                    '7406800',
+                    '7281930'
+                ) 
+                --AND P.created_at <= '${dateFormat(new Date(), "yyyy-mm-dd")}'
+                --AND P.created_at >= '${dateFormat((new Date() - 86400000), "yyyy-mm-dd")}'
         `;
 
         /** EJECUCIÓN DE QUERY. */

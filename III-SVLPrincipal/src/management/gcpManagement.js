@@ -23,14 +23,22 @@ module.exports.getDataFinance = async () => {
         const query = `
             SELECT
                 folio,
-                fulfillment_type,
-                category,
-                sku 
+                CASE
+                    WHEN fulfillment_type IS NULL THEN 'null'
+                    WHEN fulfillment_type = '' THEN 'null'
+                    ELSE fulfillment_type
+                END AS 'fulfillment_type',
+                CASE
+                    WHEN category IS NULL THEN 'null'
+                    WHEN category = '' THEN 'null'
+                    ELSE category
+                END AS 'category',
+                sku
             FROM
-                sales 
+                sales
             WHERE
                 origin = 'SVL'
-                AND folio NOT IN ('0', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10', '-11') 
+                AND folio NOT IN ('0', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10', '-11')
                 AND quantity > 0
                 AND (closeout_number = 0 OR closeout_number IS NULL)
         `;

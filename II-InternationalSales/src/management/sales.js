@@ -142,7 +142,6 @@ module.exports.updateDataVentasInternacionales = async (internationalSales) => {
 
                 /** DECLARAR QUERY. */
                 let query = `UPDATE sales SET international = ${group} WHERE RUT IN (${sRuts}) AND folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND quantity > 0 AND (closeout_number IS NULL OR closeout_number = 0) AND origin = 'SVL' AND (international = -1 OR international IS NULL)`;
-                console.log(query);
 
                 /** EJECUTAR CONSULTA SQL. */
                 await poolConnect;

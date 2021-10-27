@@ -25,9 +25,9 @@ module.exports.svlPrincipal = async () => {
             return data;
 
         /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-        const deleteFolder = await gcp.deleteFolder()
-        if (deleteFolder.error !== undefined)
-            return deleteFolder;
+        // const deleteFolder = await gcp.deleteFolder()
+        // if (deleteFolder.error !== undefined)
+        //     return deleteFolder;
 
         /** RETORNO DE RESPUESTA EXITOSA. */
         return { body: { message: 'Registros ingresados a BigQuery correctamente.', data: { "Total registros": data.outputRows, detalle: data } }};

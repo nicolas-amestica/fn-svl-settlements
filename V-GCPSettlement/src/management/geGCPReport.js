@@ -16,32 +16,84 @@ module.exports.getDataGcp = async () => {
     try {
 
         /** QUERYS. */
-        const queryPending = `SELECT DISTINCT(CAST(folio AS STRING)) AS FOLIO, CASE fulfillment_type WHEN 'null' THEN null ELSE fulfillment_type END AS FULLFILMENT_TYPE FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas`;
-        const queryCategory = `SELECT CAST(folio AS STRING) AS FOLIO, CAST(sku AS STRING) AS SKU FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas WHERE category = 'null' OR category IS NULL AND sku is not null AND sku != 0`;
+        // let withoutCategory = `WITH db_mrk_productos AS ( SELECT DISTINCT(ID_SKU) AS id_sku, ID_SUBCLASE FROM flb-rtl-dtl-marketplace-corp.datalake_retail.dbmark_lk_productos_inv WHERE CTIP_PRD = 'L' AND DATE(_PARTITIONTIME) > date_sub(current_date, interval 5 day) ) SELECT CAST(svl_finanzas.folio AS STRING) AS FOLIO, CAST(db_mrk_productos.ID_SKU AS STRING) AS SKU, db_mrk_productos.ID_SUBCLASE AS CATEGORY FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas AS svl_finanzas JOIN db_mrk_productos ON svl_finanzas.sku = db_mrk_productos.ID_SKU WHERE svl_finanzas.category = 'null'`;
+        // let pendingFolios = `SELECT DISTINCT(folio) AS FOLIO, MODALIDAD AS OMS_ABAST, CASE WHEN fecha_recepcion IS NULL THEN DATE(fecha_compra) ELSE FECHA_RECEPCION END AS RECEPCION FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado = 0 AND RECEPCIONADA = 1 UNION ALL  SELECT DISTINCT(folio) AS FOLIO, MODALIDAD AS OMS_ABAST, CASE WHEN fecha_recepcion IS NULL THEN DATE(fecha_compra) ELSE FECHA_RECEPCION END AS RECEPCION FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado = 0 AND estado_svl IN ('delivered', 'sent', 'outForDelivery') AND modalidad_svl = 'cross_docking_with_3pl' UNION ALL  SELECT DISTINCT(folio) AS FOLIO, MODALIDAD AS OMS_ABAST, CASE WHEN fecha_recepcion IS NULL THEN DATE(fecha_compra) ELSE FECHA_RECEPCION END AS RECEPCION FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado = 0 AND MODALIDAD IN ('FBF') AND FECHA_SALIDA_FBF IS NOT NULL`;
+        let pendingFolios = `
+        SELECT
+            DISTINCT(CAST(folio AS STRING)) AS FOLIO,
+            MODALIDAD AS OMS_ABAST,
+            CASE
+                WHEN fecha_recepcion IS NULL THEN CONCAT(SUBSTR(CAST(fecha_compra AS STRING), 0, 10), ' 00:00:00')
+                ELSE CONCAT(CAST(FECHA_RECEPCION AS STRING), ' 00:00:00')
+            END AS RECEPCION,
+            ESTADO_DO,
+            CAST(FECHA_COMPRA AS STRING) AS FECHA_COMPRA
+        FROM
+            flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes
+        WHERE
+            DELIVERYSTART > "2020-01-01"
+            AND liquidado = 0
+            AND RECEPCIONADA = 1
+        UNION ALL
+        SELECT
+            DISTINCT(CAST(folio AS STRING)) AS FOLIO,
+            MODALIDAD AS OMS_ABAST,
+            CASE
+                WHEN fecha_recepcion IS NULL THEN CONCAT(SUBSTR(CAST(fecha_compra AS STRING), 0, 10), ' 00:00:00')
+                ELSE CONCAT(CAST(FECHA_RECEPCION AS STRING), ' 00:00:00')
+            END AS RECEPCION,
+            ESTADO_DO,
+            CAST(FECHA_COMPRA AS STRING) AS FECHA_COMPRA
+        FROM
+            flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes
+        WHERE
+            DELIVERYSTART > "2020-01-01"
+            AND liquidado = 0
+            AND estado_svl IN ('delivered', 'sent', 'outForDelivery')
+            AND modalidad_svl = 'cross_docking_with_3pl'
+        UNION ALL
+        SELECT
+            DISTINCT(CAST(folio AS STRING)) AS FOLIO,
+            MODALIDAD AS OMS_ABAST,
+            CASE
+                WHEN fecha_recepcion IS NULL THEN CONCAT(SUBSTR(CAST(fecha_compra AS STRING), 0, 10), ' 00:00:00')
+                ELSE CONCAT(CAST(FECHA_RECEPCION AS STRING), ' 00:00:00')
+            END AS RECEPCION,
+            ESTADO_DO,
+            CAST(FECHA_COMPRA AS STRING) AS FECHA_COMPRA
+        FROM
+            flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes
+        WHERE
+            DELIVERYSTART > "2020-01-01"
+            AND liquidado = 0
+            AND MODALIDAD IN ('FBF')
+            AND FECHA_SALIDA_FBF IS NOT NULL
+        `;
 
-        const pending_job = {
-            query: queryPending,
-            location: 'US',
-            preserveNulls: true
-        };
+        const pendingFolios_job = { query: pendingFolios, location: 'US', preserveNulls: true };
+        let [dataPendingFolios] = await gcp.select(pendingFolios_job);
 
-        const category_job = {
-            query: queryCategory,
-            location: 'US',
-            preserveNulls: true
-        };
+        // const withoutCategory_job = { query: withoutCategory, location: 'US', preserveNulls: true };
+        // let [dataWithoutCategory] = await gcp.select(withoutCategory_job);
 
-        const [pending] = await gcp.select(pending_job);
-        const [category] = await gcp.select(category_job);
+        console.log([dataPendingFolios]);
+
+        // dataPendingFolios = dataPendingFolios.map(order => {
+        //     order.RECEPCION = `${order.RECEPCION.value} 00:00:00`
+        //     return order
+        // })
 
         /** RETORNO RESPUESTA. */
-        return [{
-            name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
-            data: pending
-        }, {
-            name: `${process.env.N_SIN_CATEGORIA_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
-            data: category
-        }]
+        return [
+            {
+                name: `Folios Pendientes`,
+                data: dataPendingFolios
+            },
+            // {
+            //     name: `Sin Categorias`,
+            //     data: dataWithoutCategory
+            // }
+        ]
 
     } catch (error) {
 
