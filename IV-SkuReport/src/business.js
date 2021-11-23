@@ -19,23 +19,24 @@ module.exports.getReport = async () => {
         if (data.error !== undefined || data.warn !== undefined)
             return data;
 
-        /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-        const resultUploadFile = await initialReport.uploadFileFromPath(data)
-        if (resultUploadFile.error !== undefined || resultUploadFile.warn !== undefined)
-            return resultUploadFile;
+        // /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
+        // const resultUploadFile = await initialReport.uploadFileFromPath(data)
+        // if (resultUploadFile.error !== undefined || resultUploadFile.warn !== undefined)
+        //     return resultUploadFile;
 
-        /** ENVIAR EMAIL CON ENLACE DE DESCARGA DEL ARCHIVO. */
-        const resultSendEmail = await initialReport.sendEmail({ resultUploadFile })
-        if (resultSendEmail.error !== undefined)
-            return resultSendEmail;
+        // /** ENVIAR EMAIL CON ENLACE DE DESCARGA DEL ARCHIVO. */
+        // const resultSendEmail = await initialReport.sendEmail({ resultUploadFile })
+        // if (resultSendEmail.error !== undefined)
+        //     return resultSendEmail;
 
-        /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-        const resultDeleteFile = await initialReport.deleteFile()
-        if (resultDeleteFile.error !== undefined)
-            return resultDeleteFile;
+        // /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
+        // const resultDeleteFile = await initialReport.deleteFile()
+        // if (resultDeleteFile.error !== undefined)
+        //     return resultDeleteFile;
 
         /** RETORNO DE RESPUESTA EXITOSA. */
-        return { body: { message: 'Reporte generado y enviado por correo correctamente.', data: { resultUploadFile } }};
+        return { body: { message: 'Reporte generado y enviado por correo correctamente.' }};
+        // return { body: { message: 'Reporte generado y enviado por correo correctamente.', data: { resultUploadFile } }};
 
     } catch (error) {
 

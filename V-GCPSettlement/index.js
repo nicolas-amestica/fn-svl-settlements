@@ -1,4 +1,5 @@
 'use strict';
+const { Responses } = require('../libs/responses')
 const management = require('./src/business');
 
 /**
@@ -6,12 +7,19 @@ const management = require('./src/business');
  * @param {json} context: Variable de conexto, retorna resultados.
  * @return {json}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports = async function (context) {
+module.exports = async function (context, req) {
 
-    /** MÉTODO PARA GENERAR REPORTE. */
-    const result = await management.getReport();
+    /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
+    let data = await management.getDataGcp2(context);
+    if (data.error == undefined) {
+        context.res = Responses._400({
+            error: data
+        })
+    }
 
     /** RETORNO DE RESPUESTA. */
-    context.res = result;
+    context.res = Responses._200({
+        data
+    })
 
 }

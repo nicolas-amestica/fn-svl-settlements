@@ -1,9 +1,9 @@
 'use strict';
 const fs = require('fs');
 const sql = require("mssql");
-const mySQL = require('../../../common/mySQL');
-const fileManager = require('../../../common/fileManager');
-const gcp = require('../../../common/gcloud');
+const mySQL = require('../../../libs/mySQL');
+const fileManager = require('../../../libs/fileManager');
+const gcp = require('../../../libs/gcloud');
 const dateFormat = require('dateformat');
 
 /**

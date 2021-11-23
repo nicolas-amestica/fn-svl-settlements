@@ -1,11 +1,11 @@
 'use strict';
 const fs = require('fs');
 const sql = require("mssql");
-const mySQL = require('../../../common/mySQL');
-const fileManager = require('../../../common/fileManager');
+const mySQL = require('../../../libs/mySQL');
+const fileManager = require('../../../libs/fileManager');
 const dateFormat = require('dateformat');
-const blobStorage = require('../../../common/blobStorage');
-const email = require('../../../common/email');
+const blobStorage = require('../../../libs/blobStorage');
+const email = require('../../../libs/email');
 const path = require('path');
 
 /**

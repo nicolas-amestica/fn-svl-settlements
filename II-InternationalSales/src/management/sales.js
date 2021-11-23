@@ -1,7 +1,7 @@
 'use strict';
 const sql = require("mssql");
-const mySQL = require('../../../common/mySQL');
-const queryGenerator = require('../../../common/queryGenerator');
+const mySQL = require('../../../libs/mySQL');
+const queryGenerator = require('../../../libs/queryGenerator');
 const groupBy = require('lodash.groupby');
 
 /**

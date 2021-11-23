@@ -1,7 +1,7 @@
 'use strict'
 const sql = require("mssql")
-const mySQL = require('../../../common/mySQL')
-const queryGenerator = require('../../../common/queryGenerator')
+const mySQL = require('../../../libs/mySQL')
+const queryGenerator = require('../../../libs/queryGenerator')
 const dateFormat = require('dateformat')
 
 /**
@@ -36,9 +36,8 @@ module.exports.getDataProducts = async () => {
                 AND PV.sku IS NOT NULL
                 --AND P.deleted_at IS NULL
                 AND PV.sku IN (
-                    '7406840',
-                    '7406800',
-                    '7281930'
+                    '15689160',
+                    '15548570'
                 ) 
                 --AND P.created_at <= '${dateFormat(new Date(), "yyyy-mm-dd")}'
                 --AND P.created_at >= '${dateFormat((new Date() - 86400000), "yyyy-mm-dd")}'

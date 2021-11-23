@@ -1,10 +1,10 @@
 'use strict';
 const fs = require('fs');
-const fileManager = require('../../../common/fileManager');
+const fileManager = require('../../../libs/fileManager');
 const dateFormat = require('dateformat');
-const blobStorage = require('../../../common/blobStorage');
-const email = require('../../../common/email');
-const gcp = require('../../../common/gcloud');
+const blobStorage = require('../../../libs/blobStorage');
+const email = require('../../../libs/email');
+const gcp = require('../../../libs/gcloud');
 const path = require("path");
 
 /**
