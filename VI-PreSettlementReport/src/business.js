@@ -10,7 +10,7 @@ const email = require('../../libs/email');
  * @param {Json} context: Json que contiene el contexto del azure function.
  * @return {Json}: Respuesta JSON que contiene respuesta del resultado de proceso, si falla retorna excepción.
  */
-module.exports.getDataGcp = async (context) => {
+module.exports.getDataGcp2 = async (context) => {
 
     try {
 
@@ -288,12 +288,16 @@ module.exports.getDataGcp = async (context) => {
 
         });
 
-        return "OK"
+        return {
+            message: "Enviando reporte GCP a los emails de destino."
+        }
 
     } catch (error) {
 
         console.log(error);
-        return { error }
+        return {
+            error: error
+        }
 
     }
 

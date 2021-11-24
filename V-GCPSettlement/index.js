@@ -10,7 +10,7 @@ const management = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
-    let data = await management.getDataGcp2(context);
+    let data = await management.getDataGcp(context);
     if (data.error == undefined) {
         context.res = Responses._400({
             error: data
@@ -19,6 +19,7 @@ module.exports = async function (context, req) {
 
     /** RETORNO DE RESPUESTA. */
     context.res = Responses._200({
+        message: "Enviando reporte GCP a los emails de destino.",
         data
     })
 
