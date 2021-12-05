@@ -1,4 +1,5 @@
 'use strict';
+const join = require('join-array');
 
 /**
  * Función que procesa arreglo de objetos de un elemento y concatena en un string para utilizarlo en una consulta SQL.
@@ -137,6 +138,41 @@ module.exports.divideScriptByGroup = async (data, longitud) => {
     } catch (error) {
 
         /** CAPTURA ERROR. */
+        console.log(error);
+        return { error }
+
+    }
+
+}
+
+/**
+ * Función que itera un arreglo de objetos y devuelve bloques de acuerdo al maxímo indicado.
+ * @param {[Json]} object: Arreglo de objetos con información.
+ * @param {Integer} identity: Variable que con indicador a agrupar.
+ * @return {[json]}: Retorna arreglo de string.
+ */
+module.exports.objectToStringByIdentifier = async (object, identity) => {
+
+    try {
+
+        var data = object.map(key => {
+            return key[identity]
+        });
+
+        const config = {
+            array: data,
+            separator: `', '`,
+            last: `', '`,
+            max: 1000000
+        };
+
+        let cadena = join(config); 
+        cadena = "'" + cadena + "'";
+
+        return cadena
+
+    } catch (error) {
+        
         console.log(error);
         return { error }
 

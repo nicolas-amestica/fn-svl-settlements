@@ -1,6 +1,6 @@
 'use strict';
 const { Responses } = require('../libs/responses')
-const business = require('./src/business');
+const management = require('./src/business');
 
 /**
  * Función de inicio. Recibe los parámetros de entrada que vienen de http request de tipo raw/json.
@@ -10,17 +10,15 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
-    let data = await business.getDataGcp();
-    if (data.error)
-        return context.res = Responses._400({ error: data.error });
-
-    /** ACTUALIZAR DATA EN FINANZAS. */
-    data = await business.updateData(data);
-    if (data.error)
-        return context.res = Responses._400({ error: data.error });
+    let data = await management.getDataGcp(context);
+    if (data.error == undefined) {
+        context.res = Responses._400({
+            error: data
+        })
+    }
 
     /** RETORNO DE RESPUESTA. */
-    return context.res = Responses._200({
+    context.res = Responses._200({
         message: "Enviando reporte GCP a los emails de destino.",
         data
     })

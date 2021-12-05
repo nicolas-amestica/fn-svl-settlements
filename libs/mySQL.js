@@ -1,4 +1,5 @@
 'use strict';
+const sql = require('mssql')
 
 /** VARIABLE QUE CONFIGURA LAS VARIABLES DE CONEXIÓN. */
 let configFinanzas = {
@@ -113,6 +114,29 @@ module.exports.validarConexionProductos = async () => {
     return message;
 
 }
+
+/**
+ * Función que ejecuta la consulta sql que se ingrese.
+ * @param {String} query: String que contiene la query a ejecutar.
+ * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ */
+module.exports.updateSale = async (query) => {
+
+    try {
+
+        const conn = await sql.connect(configFinanzas);
+
+        const result = await conn.request().query(query);
+
+        return result.rowsAffected[0];
+
+    } catch (error) {
+
+        return { error: error.originalError }
+
+    }
+
+};
 
 /** EXPONER VARIABLES DE CONFIGURACIÓN DE LA CONEXIÓN A LA BASE DE DATOS. */
 exports.configFinanzas = configFinanzas;
