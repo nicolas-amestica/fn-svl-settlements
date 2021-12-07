@@ -21,7 +21,7 @@ module.exports = async function (context, req) {
 
     /** RETORNO DE RESPUESTA. */
     return context.res = Responses._200({
-        message: "Enviando reporte GCP a los emails de destino.",
+        message: "Datos actualizados correctamente.",
         data
     })
 

@@ -5,7 +5,7 @@ const QueryGenerator = require('../../libs/queryGenerator')
 const MySQL = require('../../libs/mySQL')
 
 /**
- * Obtiene datos de GCP, genera archivo y envía emails.
+ * Obtiene datos de GCP.
  * @return {Json}: Respuesta JSON que contiene respuesta del resultado de proceso, si falla retorna excepción.
  */
 module.exports.getDataGcp = async () => {
@@ -80,7 +80,7 @@ module.exports.getDataGcp = async () => {
 
 /**
  * Actualizar data en base de datos finanzas.
- * @param {[Json]} data: Arreglo de objeto que tiene la información de ventas.
+ * @param {[Json]} data: Arreglo de objeto que tiene la información de ventas GCP.
  * @return {Json}: Respuesta JSON que contiene respuesta del resultado de proceso, si falla retorna excepción.
  */
 module.exports.updateData = async (data) => {
@@ -98,27 +98,39 @@ module.exports.updateData = async (data) => {
 
         /** ACTUALIZAR DATA. */
         for (const sale of Object.keys(groups)) {
-            // let query = `UPDATE sales SET reception_time = '${sale}', updatedAt = getDate() WHERE folio IN (${await QueryGenerator.objectToStringByIdentifier(groups[sale], "folio")}) AND origin = 'SVL' AND (closeout_number IS NULL OR closeout_number = 0);`;
-            // let result = await MySQL.updateSale(query)
-            let result = await MySQL.updateSale('update sales set international = 1 where id = 16977634');
-            if (result.error)
-                throw result.error;
 
-            cont++
+            let divide;
+            let result;
+            let divider = 10000
+            let query;
+
+            if (groups[sale].length > divider) {
+                divide = await QueryGenerator.divideScriptByGroup(groups[sale], divider);
+                if (divide.length > 1) {
+                    console.log(`Venta ${sale} tiene ${divide.length} a ejecutar de un total de ${groups[sale].length} ventas.`);
+                    for (const dividerSale of divide) {
+                        query = `UPDATE sales SET reception_time = '${sale}', updatedAt = getDate() WHERE folio IN (${await QueryGenerator.objectToStringByIdentifier(dividerSale, "folio")}) AND origin = 'SVL' AND (closeout_number IS NULL OR closeout_number = 0);`;
+                        result = await MySQL.updateSale(query);
+                        cont++
+                        console.log(`* ${sale} (${cont}): ${result} updated.`);
+
+                        if (result.error)
+                            throw result.error;
+                    }
+                }
+            } else {
+                query = `UPDATE sales SET reception_time = '${sale}', updatedAt = getDate() WHERE folio IN (${await QueryGenerator.objectToStringByIdentifier(groups[sale], "folio")}) AND origin = 'SVL' AND (closeout_number IS NULL OR closeout_number = 0);`;
+                result = await MySQL.updateSale(query);
+                console.log(`${sale}: ${result} updated.`);
+                cont++
+
+                if (result.error)
+                    throw result.error;
+            }
         }
 
-        // ASINCRONO
-        // Object.keys(groups).map(async sale => {
-        //     // let query = `UPDATE sales SET reception_time = '${sale}', updatedAt = getDate() WHERE folio IN (${await QueryGenerator.objectToStringByIdentifier(groups[sale], "folio")}) AND origin = 'SVL' AND (closeout_number IS NULL OR closeout_number = 0);`;
-        //     // let result = await MySQL.updateSale(query)
-        //     if (result.error)
-        //         throw result.error
-
-        //     cont++
-        // });
-
         /** RETORNO RESPUESTA. */
-        return { 'Total a actualizar': Object.keys(groups).length, 'Total actualizadas': cont };
+        return { 'Total grupos a actualizar': Object.keys(groups).length, 'Total actualizadas': cont };
 
     } catch (error) {
 

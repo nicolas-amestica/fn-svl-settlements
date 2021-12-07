@@ -1,8 +1,8 @@
 'use-strinct'
 const gcp = require('../../libs/gcloud');
-const async = require('async');
-const XlsxPopulate = require('xlsx-populate');
-const dateFormat = require('dateformat');
+// const async = require('async');
+// const XlsxPopulate = require('xlsx-populate');
+// const dateFormat = require('dateformat');
 const email = require('../../libs/email');
 
 /**
@@ -74,6 +74,7 @@ module.exports.getDataGcp = async (context) => {
 
             data.recepcion = data.RECEPCION.value.replace('T', ' ').substr(0, 19);
 
+            // FOLIOS PENDIENTES
             if (!pendienteArray.includes(data.folio.toString())) {
                 if (data.OMS_ABAST.toString() == "FBS") {
                     if (!pendienteArray2.includes(data.folio)) {
