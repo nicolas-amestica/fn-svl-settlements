@@ -137,7 +137,7 @@ module.exports.updateSale = async (query) => {
 
     try {
 
-        const conn = await sql.connect(configFinanzasTEST);
+        const conn = await sql.connect(configFinanzas);
 
         const result = await conn.request().query(query);
 
@@ -174,6 +174,11 @@ module.exports.getDataFinances = async (query) => {
 
 };
 
+/**
+ * Función que ejecuta la consulta sql que se ingrese.
+ * @param {String} query: String que contiene la query a ejecutar.
+ * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ */
 module.exports.executeProcedureFinances = async (query) => {
 
     try {

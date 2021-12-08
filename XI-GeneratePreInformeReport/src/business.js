@@ -18,8 +18,7 @@ module.exports.getData = async () => {
         console.log('OBTENIENDO INFORMACIÓN');
 
         /** QUERY */
-        // let query = `SELECT * FROM [sales] AS [sale] WHERE [sale].[origin] = N'SVL' AND [sale].[quantity] > 0 AND [sale].[folio] NOT IN (N'0', N'-1', N'-2', N'-3', N'-4', N'-6', N'-7', N'-8', N'-9', N'-10', N'-11') AND [sale].[category] IS NOT NULL AND ([sale].[fulfillment_type] = N'FBF' OR ([sale].[fulfillment_type] = N'FBS' AND ([sale].[reception_time] IS NOT NULL AND [sale].[reception_time] < getdate()))) AND ([sale].[closeout_number] IS NULL OR [sale].[closeout_number] = 0) AND [sale].[date_of_sale] <= getdate() AND ([sale].[commission_value] IS NOT NULL AND [sale].[commission_value] != 0)`;
-        let query = 'SELECT TOP 80000 * FROM sales ORDER BY ID DESC';
+        let query = `SELECT * FROM [sales] AS [sale] WHERE [sale].[origin] = N'SVL' AND [sale].[quantity] > 0 AND [sale].[folio] NOT IN (N'0', N'-1', N'-2', N'-3', N'-4', N'-6', N'-7', N'-8', N'-9', N'-10', N'-11') AND [sale].[category] IS NOT NULL AND ([sale].[fulfillment_type] = N'FBF' OR ([sale].[fulfillment_type] = N'FBS' AND ([sale].[reception_time] IS NOT NULL AND [sale].[reception_time] < getdate()))) AND ([sale].[closeout_number] IS NULL OR [sale].[closeout_number] = 0) AND [sale].[date_of_sale] <= getdate() AND ([sale].[commission_value] IS NOT NULL AND [sale].[commission_value] != 0)`;
 
         /** EJECUTAR QUERY. */
         let data = await MySQL.getDataFinances(query);
