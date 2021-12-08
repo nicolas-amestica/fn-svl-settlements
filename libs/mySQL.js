@@ -151,6 +151,47 @@ module.exports.updateSale = async (query) => {
 
 };
 
+/**
+ * Función que ejecuta la consulta sql que se ingrese.
+ * @param {String} query: String que contiene la query a ejecutar.
+ * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ */
+module.exports.getDataFinances = async (query) => {
+
+    try {
+
+        const conn = await sql.connect(configFinanzas);
+
+        const result = await conn.request().query(query);
+
+        return result.recordset;
+
+    } catch (error) {
+
+        return { error: error.originalError }
+
+    }
+
+};
+
+module.exports.executeProcedureFinances = async (query) => {
+
+    try {
+
+        const conn = await sql.connect(configFinanzas);
+
+        const result = await conn.request().query(query);
+
+        return result;
+
+    } catch (error) {
+
+        return { error: error.originalError }
+
+    }
+
+};
+
 /** EXPONER VARIABLES DE CONFIGURACIÓN DE LA CONEXIÓN A LA BASE DE DATOS. */
 exports.configFinanzas = configFinanzas;
 exports.configUsuarios = configUsuarios;

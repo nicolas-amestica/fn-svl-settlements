@@ -6,33 +6,26 @@ const path = require('path')
 
 /**
  * Función que envía correos mediante un servidor smtp de Sendgrid.
- * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * @param {json} message: Objeto JSON que contiene los parámetros para configurar el mensaje y el template.
+ * @return {json}: Respuesta JSON que retorna un mensaje con información de acción satisfactoria y resultado del envío, si falla retorna excepción.
  */
-module.exports.sendFromSendgrid = async () => {
-
-    /**   ************* EN CONSTRUCCIÓN *************  */
+module.exports.sendFromSendgrid = async (message) => {
 
     try {
 
-        const URL1 = '';
-
-        const msg = {
-            from: process.env.MAIL_FROM,
-            to: process.env.MAIL_TO,
-            cc: '',
-            subject: '',
-            text: ``,
-            html: ''
-        };
+        /** ASIGNAR API KEY A SENDGRID. */
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-            
-        let resp = await sgMail.send(msg);
 
+        /** ENVIAR CORREO. */
+        let resp = await sgMail.send(message);
+
+        /** RETORNO RESPUESTA. */
         return resp;
 
     } catch (error) {
 
-        return error.response.body
+        /** CAPTURA EXCEPCIÓN. */
+        return { error }
 
     }
 
@@ -79,8 +72,8 @@ module.exports.sendFromGmail = async (mailOpt, hbsOpt) => {
             to: mailOpt.to,
             subject: mailOpt.subject,
             template: mailOpt.template,
-            cc: mailOpt.cc,
-            bcc: mailOpt.bcc,
+            // cc: mailOpt.cc,
+            // bcc: mailOpt.bcc,
             attachments: mailOpt.attachments,
             context: mailOpt.context
         };
@@ -93,8 +86,7 @@ module.exports.sendFromGmail = async (mailOpt, hbsOpt) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** CAPTURA EXCEPCIÓN. */
         return { error }
 
     }
