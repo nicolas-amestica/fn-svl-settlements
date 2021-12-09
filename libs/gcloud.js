@@ -41,8 +41,7 @@ module.exports.insertDataFromLocalFile = async (options) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** CAPTURA EXCEPCIÓN. */
         return { error };
 
     }
@@ -74,8 +73,7 @@ module.exports.select = async (options) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** CAPTURA EXCEPCIÓN. */
         return { error };
 
     }

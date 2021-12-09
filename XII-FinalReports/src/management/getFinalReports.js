@@ -396,6 +396,8 @@ module.exports.deleteFile = async () => {
 
     try {
 
+        console.log('ELIMINANDO DIRECTORIO TEMPORAL');
+
         /** ELIMINAR CARPETA TEMPORALES. */
         fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });
 
@@ -403,9 +405,8 @@ module.exports.deleteFile = async () => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: `No se pudo eliminar el directorio ${process.env.TMP_FOLDER}.`, detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
