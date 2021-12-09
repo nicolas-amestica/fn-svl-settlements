@@ -22,6 +22,10 @@ module.exports.getFoliosIdWithoutCategory = async () => {
         if (result.error)
             throw result.error
 
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
+
         /* RETORNO RESPUESTA */
         return result
 
@@ -42,15 +46,14 @@ module.exports.updateFoliosIdWithoutCategory = async (data) => {
 
     try {
 
-        /** AGRUPAR CATEGORÍAS. */
         console.log('AGRUPANDO CATEGORÍAS');
+
+        /** AGRUPAR CATEGORÍAS. */
         let groups = await GroupBy(data, 'SKU_CATEGORY');
 
         console.log('ACTUALIZANDO VENTAS');
         
         cont = 0;
-
-        let asdf = []
         
         /** ACTUALIZAR DATA. */
         for (const category of Object.keys(groups)) {
@@ -67,6 +70,10 @@ module.exports.updateFoliosIdWithoutCategory = async (data) => {
                 throw result.error;
 
         }
+
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
 
         /** RETORNO RESPUESTA. */
         return { 'Total grupos a actualizar': Object.keys(groups).length, 'Total actualizadas': cont };
@@ -98,6 +105,10 @@ module.exports.getFoliosIdsWithoutProductCOM = async () => {
         if (result.error)
             throw result.error
 
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
+
         /* RETORNO RESPUESTA */
         return result
 
@@ -117,16 +128,15 @@ module.exports.getFoliosIdsWithoutProductCOM = async () => {
 module.exports.updateFoliosIdsWithoutProductCOM = async (data) => {
 
     try {
+        
+        console.log('AGRUPANDO PRODUCT COM');
 
         /** AGRUPAR CATEGORÍAS. */
-        console.log('AGRUPANDO PRODUCT COM');
         let groups = await GroupBy(data, 'PRODUCT_COM');
 
         console.log('ACTUALIZANDO VENTAS SIN PRODUCT COM');
         
         cont = 0;
-
-        let asdf = []
         
         /** ACTUALIZAR DATA. */
         for (const product_com of Object.keys(groups)) {
@@ -135,15 +145,18 @@ module.exports.updateFoliosIdsWithoutProductCOM = async (data) => {
             let query;
 
             query = `UPDATE sales SET product_com = ${product_com}, updatedAt = getDate() WHERE id IN (${await QueryGenerator.objectToStringByIdentifier(groups[product_com], "ID_FOLIO")}) AND origin = 'SVL' AND (product_com IS NULL OR product_com = 0) AND (closeout_number IS NULL OR closeout_number = 0)`;
-            console.log(query);
             result = await MySQL.updateSale(query);
-            // console.log(`${category}: ${result} updated.`);
+            console.log(`Product_com ${product_com}: ${result} updated.`);
             cont++
 
             if (result.error)
                 throw result.error;
 
         }
+
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
 
         /** RETORNO RESPUESTA. */
         return { 'Total grupos a actualizar': Object.keys(groups).length, 'Total actualizadas': cont };
@@ -174,6 +187,10 @@ module.exports.assignCommissions = async () => {
         let result = await MySQL.executeProcedureFinances(query);
         if (result.error)
             throw result.error
+
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
 
         /* RETORNO RESPUESTA */
         return result

@@ -132,6 +132,10 @@ module.exports.updateData = async (data) => {
             }
         }
 
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
+
         /** RETORNO RESPUESTA. */
         return { 'Total grupos a actualizar': Object.keys(groups).length, 'Total actualizadas': cont };
 

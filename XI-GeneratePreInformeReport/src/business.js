@@ -22,6 +22,12 @@ module.exports.getData = async () => {
 
         /** EJECUTAR QUERY. */
         let data = await MySQL.getDataFinances(query);
+        if (data.error)
+            throw data.error
+
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
 
         /** RETORNO RESPUESTA. */
         return [{

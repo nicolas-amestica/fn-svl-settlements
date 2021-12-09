@@ -21,6 +21,10 @@ module.exports.getDataFinance = async () => {
         if (data.error)
             throw data.error
 
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
+        
         /** RETORNO RESPUESTA. */
         return data
 
@@ -55,6 +59,10 @@ module.exports.getDataUser = async (objRuts) => {
         /** QUITAR RUT DUPLICADOS. */
         let set = new Set(data.map(JSON.stringify))
         let internationalSales = Array.from(set).map(JSON.parse);
+
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
 
         /** RETORNO RESPUESTA. */
         return internationalSales;
@@ -117,6 +125,10 @@ module.exports.updateInternationalSales = async (internationalSales) => {
                     throw result.error;
             }
         }
+
+        let con = await MySQL.closeConnection();
+        if (con.error)
+            throw con.error
 
         /** RETORNO RESPUESTA. */
         return { 'Total grupos a actualizar': Object.keys(groups).length, 'Total ventas actualizadas': cont };

@@ -93,6 +93,10 @@ module.exports.updateData = async (data) => {
                 throw result.error;
         }
 
+        let res = await MySQL.closeConnection();
+        if (res.error)
+            throw res.error
+
         /** RETORNO RESPUESTA. */
         return { 'Total grupos a actualizar': Object.keys(splitSalesGroups).length, 'Total ejecutadas': cont };
 
