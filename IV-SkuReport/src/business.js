@@ -84,7 +84,7 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
             throw result.error
 
         /** RETORNO RESPUESTA. */
-        return data;
+        return result;
 
     } catch (error) {
 
