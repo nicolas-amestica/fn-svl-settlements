@@ -141,6 +141,8 @@ module.exports.updateSale = async (query) => {
 
         const result = await conn.request().query(query);
 
+        sql.close();
+
         return result.rowsAffected[0];
 
     } catch (error) {
@@ -163,6 +165,8 @@ module.exports.getDataFinances = async (query) => {
         const conn = await sql.connect(configFinanzas);
 
         const result = await conn.request().query(query);
+
+        sql.close();
 
         return result.recordset;
 
@@ -187,7 +191,34 @@ module.exports.executeProcedureFinances = async (query) => {
 
         const result = await conn.request().query(query);
 
+        sql.close();
+
         return result;
+
+    } catch (error) {
+
+        return { error: error.originalError }
+
+    }
+
+};
+
+/**
+ * Función que ejecuta la consulta sql que se ingrese.
+ * @param {String} query: String que contiene la query a ejecutar.
+ * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ */
+ module.exports.getDataUsers = async (query) => {
+
+    try {
+
+        const conn = await sql.connect(configUsuarios);
+
+        const result = await conn.request().query(query);
+
+        sql.close();
+
+        return result.recordset;
 
     } catch (error) {
 
