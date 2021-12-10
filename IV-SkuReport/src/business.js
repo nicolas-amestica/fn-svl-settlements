@@ -1,10 +1,10 @@
 'use strict';
 const fs = require('fs');
-const fileManager = require('../../libs/fileManager');
-const dateFormat = require('dateformat');
-const blobStorage = require('../../libs/blobStorage');
-const email = require('../../libs/email');
-const gcp = require('../../libs/gcloud');
+const FileManager = require('../../libs/fileManager');
+const DateFormat = require('dateformat');
+const BlobStorage = require('../../libs/blobStorage');
+const Email = require('../../libs/email');
+const GCP = require('../../libs/gcloud');
 const path = require("path");
 
 /**
@@ -33,15 +33,15 @@ module.exports.getDataGcp = async () => {
             preserveNulls: true
         };
 
-        const [pending] = await gcp.select(pending_job);
-        const [category] = await gcp.select(category_job);
+        const [pending] = await GCP.select(pending_job);
+        const [category] = await GCP.select(category_job);
 
         /** RETORNO RESPUESTA. */
         return [{
-            name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
+            name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${DateFormat(new Date(), "yymmddHMM")}`,
             data: pending
         }, {
-            name: `${process.env.N_SIN_CATEGORIA_FILE}_${dateFormat(new Date(), "yymmddHMM")}`,
+            name: `${process.env.N_SIN_CATEGORIA_FILE}_${DateFormat(new Date(), "yymmddHMM")}`,
             data: category
         }]
 
@@ -76,10 +76,10 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
             fs.mkdirSync(dir);
 
         /** CREAR NOMBRE DEL ARCHIVO A BASE DE FECHA NUMÉRICA. */
-        const fullFileName = `${fileName}_${dateFormat(new Date(), "yyyymmddHMM")}`;
+        const fullFileName = `${fileName}_${DateFormat(new Date(), "yyyymmddHMM")}`;
 
         /** ENVIAR A EXPORTAR DATA A UN ARCHIVO XLSX. */
-        const result = await fileManager.exportToXlsxFromObject(data, fullFileName);
+        const result = await FileManager.exportToXlsxFromObject(data, fullFileName);
         if (result.error)
             throw result.error
 
@@ -104,61 +104,78 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
 
     try {
 
+        console.log('SUBIENDO ARCHIVO A BLOB STORAGE');
+
         /** DEFINIR NOMBRE DEL ARCHIVO A GUARDAR. */
         let fileName = path.basename(fullFileName);
 
         /** ENVIAR A SUBIR ARCHIVO AL BLOB STORAGE. */
-        let result = await blobStorage.uploadFileFromLocal('reports', fileName, `${process.env.TMP_FOLDER}${fileName}`);
+        let result = await BlobStorage.uploadFileFromLocal(process.env.AZURE_BLOBSTORAGE_NAME, fileName, `${process.env.TMP_FOLDER}${fileName}`);
         if (result.error)
-            return { status: 400, body: { error: result.error }, error: {} };
+            throw result.error
 
         /** RETORNO RESPUESTA. */
         return result;
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo subir el archivo.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
 }
 
 /**
- * Función que envía email según los parámetros que se configuren.
- * @param {[Json]} urlFiles: Arreglo de objeto con los datos (incluyendo la url) subidos al Blob Storage.
+ * Función que envía correo según los parámetros que se configuren.
+ * @param {Json} file: Json que contiene la url del archivo local y el nombre del archivo.
  * @return {Json}: Respuesta JSON de la función que retorna el resultado del envío del email, incluye respuesta satisfactoria o fallo.
  */
-module.exports.sendEmail = async (urlFiles) => {
+module.exports.sendEmail = async (file) => {
 
     try {
 
-        let urlTag = [];
+        console.log('ENVIANDO ARCHIVO POR CORREO');
 
-        /** VALIDA QUE EL PARÁMETRO DE ENTRADA TENGA CONTENIDO. */
-        if (Object.keys(urlFiles).length == 0)
-            return { status: 401, body: { message: 'No se pudo enviar el email.', detalle: 'No se ha podido obtener la url del archivo.' }, error: {} };
+        if (!file.url)
+            throw 'No se ha podido obtener la url del archivo.';
 
-        /** ITERAR ARREGLO DE OBJETO AGREGANDO URL Y NOMBRE A LA VARIABLE URLTAG. */
-        for (const file of Object.keys(urlFiles)) {
-            urlTag.push({url: urlFiles[file].url, name: (path.basename(urlFiles[file].url, '.xlsx')).toUpperCase() })
-        }
+        let from = process.env.SENDGRID_MAIL_FROM;
+        let to = process.env.SENDGRID_MAIL_TO;
+        let cc = process.env.SENDGRID_MAIL_CC;
+        let bcc = process.env.SENDGRID_MAIL_BCC;
 
-        /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        let configEmail = {
-            from: process.env.GMAIL_AUTH_USER,
-            to: process.env.SENDGRID_MAIL_TO,
-            cc: process.env.SENDGRID_MAIL_CC,
-            bcc: process.env.SENDGRID_MAIL_BCC,
-            subject: `PROCESO LIQUIDACIÓN ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+        // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        // const message = {
+        //     from: from,
+        //     to: to.split(','),
+        //     // cc: cc.split(','),
+        //     // bcc: bc.split(','),
+        //     subject: `Informe Preliquidación ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+        //     html: `Estimados,<br><br>
+        //     En el siguiente enlace podrá descargar el informe preliquidación<br><br>
+        //     <a href='${file.url}'>DESCARGAR</a><br><br>
+        //     Atte.<br>
+        //     ${process.env.NOMBRE_INFORMA}`,
+        // }
+
+        // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        // let result = await Email.sendFromSendgrid(message);
+
+         /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+         let configEmail = {
+            from: from,
+            to: to.split(','),
+            // cc: process.env.SENDGRID_MAIL_CC,
+            // bcc: process.env.SENDGRID_MAIL_BCC,
+            subject: `Informe SKU ${DateFormat(new Date(), "yyyy-mm-dd")}`,
             template: 'settlement',
             context: {
-                dear: 'Estimados,',
-                message: 'Se inicia proceso liquidación adjuntanto el informe inicial denominado InformeSKU:',
-                urlTag: urlTag,
+                dear: 'Estimados(as),',
+                message: 'En el siguiente enlace podrá descargar el informe SKU:',
+                urlTag: { url: file.url, name: (path.basename(file.url, '.xlsx')) },
                 greeting: 'Atte.',
-                sender: 'Nicolás Améstica Vidal'
+                sender: `${process.env.NOMBRE_INFORMA}`
             }
         }
 
@@ -169,18 +186,17 @@ module.exports.sendEmail = async (urlFiles) => {
         }
 
         /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        let result = await email.sendFromGmail(configEmail, optionsHBS);
-        if (result.errno)
-            return { status: 201, body: { message: 'No se pudo enviar el email.', detalle: result }};
+        let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        if (result.error)
+            throw result.error;
 
         /** RETORNO RESPUESTA. */
         return result;
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo enviar el mail.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
@@ -190,20 +206,22 @@ module.exports.sendEmail = async (urlFiles) => {
  * Eliminar directorio de carpeta temporal.
  * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports.deleteFile = async () => {
+module.exports.deleteFolder = async () => {
 
     try {
+
+        console.log('ELIMINANDO DIRECTORIO TEMPORAL');
 
         /** ELIMINAR CARPETA TEMPORALES. */
         fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });
 
+        /** RETORNO RESPUESTA. */
         return true;
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: `No se pudo eliminar el directorio ${process.env.TMP_FOLDER}.`, detalle: error }, error: {} };
+        /** RETORNO EXCEPCIÓN. */
+        return { error }
 
     }
 

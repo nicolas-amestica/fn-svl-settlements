@@ -184,7 +184,7 @@ module.exports.sendEmail = async (file) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
+        /** CAPTURA EXCEPCIÓN. */
         return { error };
 
     }
