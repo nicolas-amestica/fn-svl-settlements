@@ -9,51 +9,64 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER FOLIOS PENDIENTES DE FINANZAS. */
-    let getDataPending = await business.getDataPending();
+    let data = await business.getDataPending();
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
+    
+    /** EXPORTAR DATOS A ARCHIVO XLSX EN CARPETA TEMPORAL. */
+    data = await business.exportToXlsxFromObject(data, process.env.N_PENDIENTES_LIQUIDAR_FILE);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
+
+    /** SUBIR ARCHIVO XLSX AL BLOB STORAGE. */
+    let getDataPending = await business.uploadFileFromPath(data)
     if (getDataPending.error)
         return context.res = Responses._400({ error: getDataPending.error });
 
-    // /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-    // getDataPending = await business.exportToCSV(getDataPending);
-    // if (getDataPending.error !== undefined)
-    //     return getDataPending;
+    /** OBTENER VENTAS LIQUIDADAS DE FINANZAS. */
+    data = await business.getDataSales();
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
 
-    // /** OBTENER VENTAS LIQUIDADAS DE FINANZAS. */
-    // let getDataSales = await business.getDataSales();
-    // if (getDataSales.error !== undefined)
-    //     return getDataSales;
+    /** EXPORTAR DATOS A ARCHIVO XLSX EN CARPETA TEMPORAL. */
+    data = await business.exportToXlsxFromObject(data, process.env.N_SALES_FILE);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
 
-    // /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-    // getDataSales = await business.exportToCSV(getDataSales);
-    // if (getDataSales.error !== undefined)
-    //     return getDataSales;
+    /** SUBIR ARCHIVO XLSX AL BLOB STORAGE. */
+    let getDataSales = await business.uploadFileFromPath(data)
+    if (getDataSales.error)
+        return context.res = Responses._400({ error: getDataSales.error });
 
-    // /** OBTENER SELLERS LIQUIDADOS DE FINANZAS. */
-    // let getDataSellers = await business.getDataSellers();
-    // if (getDataSellers.error !== undefined)
-    //     return getDataSellers;
+    /** OBTENER SELLERS LIQUIDADOS DE FINANZAS. */
+    data = await business.getDataSellers();
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
 
-    // /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-    // getDataSellers = await business.exportToCSV(getDataSellers);
-    // if (getDataSellers.error !== undefined)
-    //     return getDataSellers;
+    /** EXPORTAR DATOS A ARCHIVO XLSX EN CARPETA TEMPORAL. */
+    data = await business.exportToXlsxFromObject(data, process.env.N_SELLERS_FILE);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
 
-    // /** ENVIAR EMAIL CON ENLACES DE DESCARGAS DE LOS ARCHIVOS. */
-    // const resultSendEmail = await business.sendEmail({ getDataPending, getDataSales, getDataSellers })
-    // if (resultSendEmail.error !== undefined)
-    //     return resultSendEmail;
+    /** SUBIR ARCHIVO XLSX AL BLOB STORAGE. */
+    let getDataSellers = await business.uploadFileFromPath(data)
+    if (getDataSellers.error)
+        return context.res = Responses._400({ error: getDataSellers.error });
 
-    // /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-    // const resultDeleteFile = await business.deleteFile()
-    // if (resultDeleteFile.error !== undefined)
-    //     throw resultDeleteFile;
+    /** ENVIAR EMAIL CON ENLACES DE DESCARGAS DE LOS ARCHIVOS. */
+    const resultSendEmail = await business.sendEmail({ getDataPending, getDataSales, getDataSellers })
+    if (resultSendEmail.error)
+        return context.res = Responses._400({ error: resultSendEmail.error });
+
+    /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
+    resultDeleteFile = await business.deleteFolder()
+    if (resultDeleteFile.error)
+        return context.res = Responses._400({ error: resultDeleteFile.error });
 
     /** RETORNO DE RESPUESTA. */
     return context.res = Responses._200({
         message: "Reportes generados correctamente.",
-        data: {
-            getDataPending
-        }
+        data: resultSendEmail
     })
 
 };

@@ -19,10 +19,10 @@ module.exports.getDataPending = async () => {
         console.log('OBTENIENDO INFORMACIÓN DE FOLIOS PENDIENTES');
 
         /** QUERY. */
-        const query = `SELECT sl.id, sl.closeout_number, sl.term, sl.rut, sl.quantity, sl.sku, REPLACE(REPLACE(REPLACE(TRIM(REPLACE(sk.seller_sku, '''', '')), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS seller_sku, REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(sk.product_name, '''', ''), ';', ' '), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS description, sl.percentage, sl.gross_sale_income, sl.IVA_gross_income, sl.net_sale_income, sl.commission_value, sl.net_sale_to_bill, sl.IVA_to_bill, sl.gross_income_to_bill, sl.folio, CONVERT(VARCHAR, sl.createdAt, 120) AS createdAt, CONVERT(VARCHAR, sl.updatedAt, 120) AS updatedAt, CONVERT(VARCHAR, sl.date_of_sale, 120) AS date_of_sale, CONVERT(VARCHAR, sl.reception_time, 120) AS reception_time, sl.category, sl.origin, sl.fulfillment_type, sl.purchase_order, sl.sales_commission, sl.discount_value, sl.discounted_commission, sl.total_commission, REPLACE(REPLACE(REPLACE(REPLACE(sl.ticket_number, ';', ' '), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS ticket_number, sl.international, sl.business, sl.country FROM sales sl LEFT JOIN skus sk ON sl.sku = sk.sku WHERE sl.origin = 'SVL' AND sl.folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND sl.quantity > 0 AND (sl.closeout_number = 0 OR sl.closeout_number IS NULL) AND sl.international = 0`;
+        let query = `SELECT sl.id, sl.closeout_number, sl.term, sl.rut, sl.quantity, sl.sku, REPLACE(REPLACE(REPLACE(TRIM(REPLACE(sk.seller_sku, '''', '')), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS seller_sku, REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(sk.product_name, '''', ''), ';', ' '), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS description, sl.percentage, sl.gross_sale_income, sl.IVA_gross_income, sl.net_sale_income, sl.commission_value, sl.net_sale_to_bill, sl.IVA_to_bill, sl.gross_income_to_bill, sl.folio, CONVERT(VARCHAR, sl.createdAt, 120) AS createdAt, CONVERT(VARCHAR, sl.updatedAt, 120) AS updatedAt, CONVERT(VARCHAR, sl.date_of_sale, 120) AS date_of_sale, CONVERT(VARCHAR, sl.reception_time, 120) AS reception_time, sl.category, sl.origin, sl.fulfillment_type, sl.purchase_order, sl.sales_commission, sl.discount_value, sl.discounted_commission, sl.total_commission, REPLACE(REPLACE(REPLACE(REPLACE(sl.ticket_number, ';', ' '), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS ticket_number, sl.international, sl.business, sl.country FROM sales sl LEFT JOIN skus sk ON sl.sku = sk.sku WHERE sl.origin = 'SVL' AND sl.folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND sl.quantity > 0 AND (sl.closeout_number = 0 OR sl.closeout_number IS NULL) AND sl.international = 0`;
 
         /** EJECUCIÓN DE QUERY. */
-        const data = await MySQL.getDataFinances(query);
+        let data = await MySQL.getDataFinances(query);
         if (data.error)
             return data.error;
 
@@ -32,7 +32,7 @@ module.exports.getDataPending = async () => {
             throw con.error
 
         /** RETORNO RESPUESTA. */
-        return { name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${DateFormat(new Date(), "yyyymmddHMM")}`, data: data };
+        return [{ name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${DateFormat(new Date(), "yymmddHMM")}`, data }]
 
     } catch (error) {
 
@@ -52,12 +52,10 @@ module.exports.getDataSales = async () => {
     try {
 
         /** CREAR CONEXIÓN A BASE DE DATOS mySQL. */
-        let valida = await mySQL.validarConexionFinanzas();
-        if (valida.length > 0) return { status: 400, body: { error: 'No se pudo validar la conexión a finanzas.' }, error: {} };
-        let pool = await sql.connect(mySQL.configFinanzas);
+        console.log('OBTENIENDO INFORMACIÓN DE VENTAS LIQUIDADAS');
 
         /** QUERY. */
-        const query = `
+        let query = `
             SELECT
                 sal.id AS id,
                 sal.closeout_number AS closeout_number,
@@ -133,25 +131,28 @@ module.exports.getDataSales = async () => {
             WHERE
                 1 = 1
                 AND clo.origin = 'SVL'
-                AND clo.term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
+                AND clo.term = '2021-12-10'
         `;
 
+        // AND clo.term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
+
         /** EJECUCIÓN DE QUERY. */
-        const data = await pool.request().query(query);
-        if (!data)
-            return { status: 400, body: { error: 'No se pudo consultar las ventas liquidadas de finanzas.' }, error: {} };
+        let data = await MySQL.getDataFinances(query);
+        if (data.error)
+            throw data.error;
 
         /** CERRAR CONEXIÓN A SQL. */
-        sql.close();
+        let con = await MySQL.closeConnection();
+        if (con.error)
+            throw con.error;
 
         /** RETORNO RESPUESTA. */
-        return { name: `${process.env.N_SALES_FILE}_${dateFormat(new Date(), "yyyymmddHMM")}`, data: data.recordset }
+        return [{ name: `${process.env.N_SALES_FILE}_${DateFormat(new Date(), "yyyymmddHMM")}`, data }]
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo seguir con la obtención de ventas liquidadas.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
@@ -165,10 +166,8 @@ module.exports.getDataSellers = async () => {
 
     try {
 
-        /** CREAR CONEXIÓN A BASE DE DATOS mySQL. */
-        let valida = await mySQL.validarConexionFinanzas();
-        if (valida.length > 0) return { status: 400, body: { error: 'No se pudo validar la conexión a finanzas.' }, error: {} };
-        let pool = await sql.connect(mySQL.configFinanzas);
+        /** CREAR CONEXIÓN A BASE DE DATOS MYSQL. */
+        console.log('OBTENIENDO INFORMACIÓN DE SELLERS LIQUIDADOS');
 
         /** QUERY. */
         const query = `
@@ -190,25 +189,27 @@ module.exports.getDataSellers = async () => {
             FROM
                 closeouts
             WHERE
-                term = '${dateFormat(new Date(), "yyyy-mm-dd")}'
+                term = '2021-12-10'
         `;
+        // term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
-        const data = await pool.request().query(query);
-        if (!data)
-            return { status: 400, body: { error: 'No se pudo consultar los sellers liquidados de finanzas.' }, error: {} };
+        const data = await MySQL.getDataFinances(query);
+        if (data.error)
+            throw data.error;
 
         /** CERRAR CONEXIÓN A SQL. */
-        sql.close();
+        let con = await MySQL.closeConnection();
+        if (con.error)
+            throw con.error;
 
         /** RETORNO RESPUESTA. */
-        return { name: `${process.env.N_SELLERS_FILE}_${dateFormat(new Date(), "yyyymmddHMM")}`, data: data.recordset }
+        return [{ name: `${process.env.N_SELLERS_FILE}_${DateFormat(new Date(), "yyyymmddHMM")}`, data }]
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo seguir con la obtención de sellers liquidados.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
@@ -256,26 +257,72 @@ module.exports.exportToCSV = async (data) => {
 }
 
 /**
- * Subir archivo a Azure Blob Storage.
- * @param {String} fileName: Arreglo de nombres de archivos.
- * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
+ * Exportar los datos de finanzas a un archivo csv. Este es almacenado en la carpeta temporal tmp ubicada en la raíz del proyecto.
+ * @param {[Json]} data: Arreglo de objetos que contiene data, name y header.
+ * @param {String} fileName: Nombre del archivo a generar.
+ * @return {String}: Respuesta String que indica la ruta y nombre del archivo que se generó, si falla envía una expceción.
  */
-module.exports.uploadFileFromPath = async (fileName) => {
+module.exports.exportToXlsxFromObject = async (data, fileName) => {
 
     try {
 
-        let result = await blobStorage.uploadFileFromLocal('reports', fileName, `${process.env.TMP_FOLDER}${fileName}`);
-        if (!result)
-            return { status: 401, body: { error: 'No se pudo subir archivos a blob storage' }, error: {} };
+        console.log('EXPORTANDO DATA A XLSX');
+
+        /** VALIDAR QUE LA VARIABLE DAT TENGA CONTENIDO. */
+        if (data.length == 0)
+            throw 'No existen datos a exportar.';
+
+        /** CREAR CARPETA TEMPORAL. */
+        const dir = `./${process.env.TMP_FOLDER}`;
+        if (!fs.existsSync(dir))
+            fs.mkdirSync(dir);
+
+        /** CREAR NOMBRE DEL ARCHIVO A BASE DE FECHA NUMÉRICA. */
+        const fullFileName = `${fileName}_${DateFormat(new Date(), "yyyymmddHMM")}`;
+
+        /** ENVIAR A EXPORTAR DATA A UN ARCHIVO XLSX. */
+        const result = await FileManager.exportToXlsxFromObject(data, fullFileName);
+        if (result.error)
+            throw result.error
 
         /** RETORNO RESPUESTA. */
         return result;
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudieron subir los archivos.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
+
+    }
+
+}
+
+/**
+ * Subir archivo a Azure Blob Storage.
+ * @param {String} fullFileName: Nombre del archivo a subir.
+ * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
+ */
+module.exports.uploadFileFromPath = async (fullFileName) => {
+
+    try {
+
+        console.log('SUBIENDO ARCHIVO A BLOB STORAGE');
+
+        /** DEFINIR NOMBRE DEL ARCHIVO A GUARDAR. */
+        let fileName = path.basename(fullFileName);
+
+        /** ENVIAR A SUBIR ARCHIVO AL BLOB STORAGE. */
+        let result = await BlobStorage.uploadFileFromLocal(process.env.AZURE_BLOBSTORAGE_NAME, fileName, `${process.env.TMP_FOLDER}${fileName}`);
+        if (result.error)
+            throw result.error
+
+        /** RETORNO RESPUESTA. */
+        return result;
+
+    } catch (error) {
+
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
@@ -290,31 +337,54 @@ module.exports.sendEmail = async (urlFiles) => {
 
     try {
 
+        console.log('ENVIANDO CORREO');
+
         let urlTag = [];
 
         /** VALIDA QUE EL PARÁMETRO DE ENTRADA TENGA CONTENIDO. */
         if (Object.keys(urlFiles).length == 0)
-            return { status: 401, body: { message: 'No se pudo enviar el email.', detalle: 'No se ha podido obtener la url del archivo.' }, error: {} };
+            throw 'No se ha podido obtener la url del archivo.'
 
         /** ITERAR ARREGLO DE OBJETO AGREGANDO URL Y NOMBRE A LA VARIABLE URLTAG. */
-        for (const file of Object.keys(urlFiles)) {
-            urlTag.push({url: urlFiles[file].url, name: (path.basename(urlFiles[file].url, '.csv')).toUpperCase() })
-        }
+        for (const file of Object.keys(urlFiles))
+            urlTag.push({url: urlFiles[file].url, name: (path.basename(urlFiles[file].url, '.xlsx')) })
+        
+        let from = process.env.SENDGRID_MAIL_FROM;
+        let to = process.env.SENDGRID_MAIL_TO;
+        let cc = process.env.SENDGRID_MAIL_CC;
+        let bcc = process.env.SENDGRID_MAIL_BCC;
+
+        // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        // const message = {
+        //     from: from,
+        //     to: to.split(','),
+        //     // cc: cc.split(','),
+        //     // bcc: bc.split(','),
+        //     subject: `Informe Preliquidación ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+        //     html: `Estimados,<br><br>
+        //     En el siguiente enlace podrá descargar el informe preliquidación<br><br>
+        //     <a href='${file.url}'>DESCARGAR</a><br><br>
+        //     Atte.<br>
+        //     ${process.env.NOMBRE_INFORMA}`,
+        // }
+
+        // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        // let result = await Email.sendFromSendgrid(message);
 
         /** CONFIGURAR PARÁMETROS DEL EMAIL. */
         let configEmail = {
-            from: process.env.GMAIL_AUTH_USER,
-            to: process.env.SENDGRID_MAIL_TO,
-            cc: process.env.SENDGRID_MAIL_CC,
-            bcc: process.env.SENDGRID_MAIL_BCC,
-            subject: `PROCESO LIQUIDACIÓN ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+            from: from,
+            to: to.split(','),
+            // cc: process.env.SENDGRID_MAIL_CC,
+            // bcc: process.env.SENDGRID_MAIL_BCC,
+            subject: `PROCESO LIQUIDACIÓN ${DateFormat(new Date(), "yyyy-mm-dd")}`,
             template: 'settlement',
             context: {
                 dear: 'Estimados,',
                 message: 'Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:',
                 urlTag: urlTag,
                 greeting: 'Atte.',
-                sender: 'Nicolás Améstica Vidal'
+                sender: process.env.NOMBRE_INFORMA
             }
         }
 
@@ -325,18 +395,17 @@ module.exports.sendEmail = async (urlFiles) => {
         }
 
         /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        let result = await email.sendFromGmail(configEmail, optionsHBS);
-        if (result.errno)
-            return { status: 201, body: { message: 'No se pudo enviar el email.', detalle: result }};
+        let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        if (result.error)
+            throw result.error;
 
         /** RETORNO RESPUESTA. */
         return result;
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 400, body: { error: 'No se pudo enviar el mail.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
@@ -346,7 +415,7 @@ module.exports.sendEmail = async (urlFiles) => {
  * Eliminar directorio de carpeta temporal.
  * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports.deleteFile = async () => {
+module.exports.deleteFolder = async () => {
 
     try {
 
@@ -355,12 +424,13 @@ module.exports.deleteFile = async () => {
         /** ELIMINAR CARPETA TEMPORALES. */
         fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });
 
+        /** RETORNO RESPUESTA. */
         return true;
 
     } catch (error) {
 
-        /** CAPTURA EXCEPCIÓN. */
-        return { error };
+        /** RETORNO EXCEPCIÓN. */
+        return { error }
 
     }
 
