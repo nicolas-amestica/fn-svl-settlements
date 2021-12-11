@@ -1,6 +1,5 @@
 'use strict';
 const fs = require('fs');
-const sql = require("mssql");
 const MySQL = require('../../libs/mySQL');
 const FileManager = require('../../libs/fileManager');
 const DateFormat = require('dateformat');
@@ -31,8 +30,7 @@ module.exports.getDataPending = async () => {
         if (con.error)
             throw con.error
 
-        /** RETORNO RESPUESTA. */
-        return [{ name: `${process.env.N_PENDIENTES_LIQUIDAR_FILE}_${DateFormat(new Date(), "yymmddHMM")}`, data }]
+        return data
 
     } catch (error) {
 
@@ -131,10 +129,8 @@ module.exports.getDataSales = async () => {
             WHERE
                 1 = 1
                 AND clo.origin = 'SVL'
-                AND clo.term = '2021-12-10'
+                AND clo.term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
         `;
-
-        // AND clo.term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
         let data = await MySQL.getDataFinances(query);
@@ -146,8 +142,7 @@ module.exports.getDataSales = async () => {
         if (con.error)
             throw con.error;
 
-        /** RETORNO RESPUESTA. */
-        return [{ name: `${process.env.N_SALES_FILE}_${DateFormat(new Date(), "yyyymmddHMM")}`, data }]
+        return data
 
     } catch (error) {
 
@@ -189,12 +184,11 @@ module.exports.getDataSellers = async () => {
             FROM
                 closeouts
             WHERE
-                term = '2021-12-10'
+                term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
         `;
-        // term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
-        const data = await MySQL.getDataFinances(query);
+        let data = await MySQL.getDataFinances(query);
         if (data.error)
             throw data.error;
 
@@ -203,8 +197,7 @@ module.exports.getDataSellers = async () => {
         if (con.error)
             throw con.error;
 
-        /** RETORNO RESPUESTA. */
-        return [{ name: `${process.env.N_SELLERS_FILE}_${DateFormat(new Date(), "yyyymmddHMM")}`, data }]
+        return data
 
     } catch (error) {
 
@@ -220,37 +213,36 @@ module.exports.getDataSellers = async () => {
  * @param {Json} data: Objeto que contiene propiedades data y name.
  * @return {[Json]}: Retorna arreglo con nombres de los archivos creados (incluyento url), si falla retorna excepción.
  */
-module.exports.exportToCSV = async (data) => {
+module.exports.exportToCSV = async (data, name) => {
 
     try {
 
+        console.log('EXPORTANDO DATA A CSV');
+
         /** VALIDAR QUE LA VARIABLE DATA TENGA CONTENIDO. */
         if (Object.keys(data).length == 0)
-            return { status: 401, body: { message: 'No existen datos a exportar.' }, error: {} };
+            throw 'No existen datos a exportar.';
 
         /** CREAR CARPETA TEMPORAL. */
         const dir = `./${process.env.TMP_FOLDER}`;
         if (!fs.existsSync(dir))
             fs.mkdirSync(dir);
 
-        /** ITERAR ARCHIVO PARA QUE PUEDA SER EXPORTADO A CSV. */
-        data = await fileManager.exportDataToCSV(data.data, data.name);
-        if (data.error)
-            return { status: 401, body: { message: 'No se pudo exportar los archivos.', detalle: data.error }, error: {} };
+        /** CREAR NOMBRE DEL ARCHIVO A BASE DE FECHA NUMÉRICA. */
+        const fullFileName = `${name}_${DateFormat(new Date(), "yyyymmddHMM")}`;
 
-        /** SUBE ARCHIVO ALMACENADO EN CARPETA TEMPORAL AL BLOB STORAGE. */
-        data = await this.uploadFileFromPath(data.name);
-        if (data.error)
-            return { status: 401, body: { message: 'No se pudo subir el archivo.', detalle: data.error }, error: {} };
+        /** ITERAR ARCHIVO PARA QUE PUEDA SER EXPORTADO A CSV. */
+        let result = await FileManager.exportDataToCSV(data, fullFileName);
+        if (result.error)
+            throw result.error;
 
         /** RETORNO RESPUESTA. */
-        return data;
+        return result;
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
-        return { status: 401, body: { error: 'No se pudo exportar los datos.', detalle: error }, error: {} };
+        /** CAPTURA EXCEPCIÓN. */
+        return { error };
 
     }
 
@@ -309,7 +301,7 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
         console.log('SUBIENDO ARCHIVO A BLOB STORAGE');
 
         /** DEFINIR NOMBRE DEL ARCHIVO A GUARDAR. */
-        let fileName = path.basename(fullFileName);
+        let fileName = path.basename(fullFileName.path);
 
         /** ENVIAR A SUBIR ARCHIVO AL BLOB STORAGE. */
         let result = await BlobStorage.uploadFileFromLocal(process.env.AZURE_BLOBSTORAGE_NAME, fileName, `${process.env.TMP_FOLDER}${fileName}`);

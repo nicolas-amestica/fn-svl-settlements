@@ -13,12 +13,12 @@ module.exports = async function (context, req) {
     if (data.error)
         return context.res = Responses._400({ error: data.error });
     
-    /** EXPORTAR DATOS A ARCHIVO XLSX EN CARPETA TEMPORAL. */
-    data = await business.exportToXlsxFromObject(data, process.env.N_PENDIENTES_LIQUIDAR_FILE);
+    /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
+    data = await business.exportToCSV(data, process.env.N_PENDIENTES_LIQUIDAR_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
-    /** SUBIR ARCHIVO XLSX AL BLOB STORAGE. */
+    /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
     let getDataPending = await business.uploadFileFromPath(data)
     if (getDataPending.error)
         return context.res = Responses._400({ error: getDataPending.error });
@@ -28,12 +28,12 @@ module.exports = async function (context, req) {
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
-    /** EXPORTAR DATOS A ARCHIVO XLSX EN CARPETA TEMPORAL. */
-    data = await business.exportToXlsxFromObject(data, process.env.N_SALES_FILE);
+    /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
+    data = await business.exportToCSV(data, process.env.N_SALES_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
-    /** SUBIR ARCHIVO XLSX AL BLOB STORAGE. */
+    /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
     let getDataSales = await business.uploadFileFromPath(data)
     if (getDataSales.error)
         return context.res = Responses._400({ error: getDataSales.error });
@@ -43,25 +43,25 @@ module.exports = async function (context, req) {
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
-    /** EXPORTAR DATOS A ARCHIVO XLSX EN CARPETA TEMPORAL. */
-    data = await business.exportToXlsxFromObject(data, process.env.N_SELLERS_FILE);
+    /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
+    data = await business.exportToCSV(data, process.env.N_SELLERS_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
-    /** SUBIR ARCHIVO XLSX AL BLOB STORAGE. */
+    /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
     let getDataSellers = await business.uploadFileFromPath(data)
     if (getDataSellers.error)
         return context.res = Responses._400({ error: getDataSellers.error });
 
     /** ENVIAR EMAIL CON ENLACES DE DESCARGAS DE LOS ARCHIVOS. */
-    const resultSendEmail = await business.sendEmail({ getDataPending, getDataSales, getDataSellers })
+    let resultSendEmail = await business.sendEmail({ getDataPending, getDataSales, getDataSellers })
     if (resultSendEmail.error)
         return context.res = Responses._400({ error: resultSendEmail.error });
 
     /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-    resultDeleteFile = await business.deleteFolder()
-    if (resultDeleteFile.error)
-        return context.res = Responses._400({ error: resultDeleteFile.error });
+    data = await business.deleteFolder()
+    if (data.error)
+        return context.res = Responses._400({ error: data.error });
 
     /** RETORNO DE RESPUESTA. */
     return context.res = Responses._200({
