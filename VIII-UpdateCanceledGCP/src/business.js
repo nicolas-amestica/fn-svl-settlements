@@ -62,8 +62,8 @@ module.exports.updateData = async (context, data) => {
 
     try {
 
-        /** AGRUPAR FOLIOS. */
-        context.log('AGRUPANDO VENTAS');
+        /** DIVIDIR OBJETO. */
+        context.log('DIVIDIENDO VENTAS');
 
         let cont = 0;
         let result;

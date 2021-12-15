@@ -1,17 +1,32 @@
-'use strict';
-const management = require('./src/business');
+'use-strict';
+const { Responses } = require('../libs/responses')
+const business = require('./src/business');
 
 /**
- * Función de inicio.
- * @param {json} context: Variable de conexto, retorna resultados.
- * @return {json}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
+ * Actualiza la tabla de skus de finanzas trayendo los skus de la base de datos de productos.
+ * @return {json}: Respuesta JSON que retorna la respuesta del proceso completo, si falla retorna excepción.
  */
-module.exports = async function (context) {
+module.exports.skuUpdater = async (context, req) => {
 
-    /** MÉTODO PARA ACTUALIZAR SKUS. */
-    const result = await management.skuUpdater();
+    /** OBTENER DATOS DE FINANZAS. */
+    let data = await business.getDataFinances(context);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error })
+
+    /** OBTENER DATOS DE PRODUCTOS. */
+    data = await business.getDataProducts(context, data);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error })
+
+    /** INSERCIÓN DE DATOS DE PRODUCTOS EN FINANZAS. */
+    data = await business.updateSku(context, data);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error })
 
     /** RETORNO DE RESPUESTA. */
-    context.res = result;
+    context.res = Responses._200({
+        message: `SKU's actualizados correctamente`,
+        data
+    })
 
-}
+};
