@@ -20,8 +20,7 @@ module.exports.deleteFile = async (filePath) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** CAPTURA EXCEPCIÓN. */
         return { error };
 
     }
@@ -46,8 +45,7 @@ module.exports.deleteFolder = async (folderPath, recursive) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error };
 
     }
@@ -82,8 +80,7 @@ module.exports.exportDataToCSV = async (data, fileName) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error };
 
     }
@@ -117,8 +114,7 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error };
 
     }

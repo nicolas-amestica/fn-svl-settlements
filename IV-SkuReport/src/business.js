@@ -11,11 +11,11 @@ const path = require("path");
  * Obtiene los folios desde la base de datos de GCP mediante bigquery.
  * @return {[Json]}: Respuesta JSON que contiene data y name de folios pendientes y sin sku, si falla retorna excepción.
  */
-module.exports.getDataGcp = async () => {
+module.exports.getDataGcp = async (context) => {
 
     try {
 
-        console.log('OBTENIENDO INFORMACIÓN');
+        context.log('OBTENIENDO INFORMACIÓN');
 
         /** QUERYS. */
         const queryPending = `SELECT DISTINCT(CAST(folio AS STRING)) AS FOLIO, CASE fulfillment_type WHEN 'null' THEN null ELSE fulfillment_type END AS FULLFILMENT_TYPE FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas`;
@@ -60,11 +60,11 @@ module.exports.getDataGcp = async () => {
  * @param {String} fileName: Nombre del archivo a generar.
  * @return {String}: Respuesta String que indica la ruta y nombre del archivo que se generó, si falla envía una expceción.
  */
-module.exports.exportToXlsxFromObject = async (data, fileName) => {
+module.exports.exportToXlsxFromObject = async (context, data, fileName) => {
 
     try {
 
-        console.log('EXPORTANDO DATA A XLSX');
+        context.log('EXPORTANDO DATA A XLSX');
 
         /** VALIDAR QUE LA VARIABLE DAT TENGA CONTENIDO. */
         if (data.length == 0)
@@ -100,11 +100,11 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
  * @param {String} fullFileName: Nombre del archivo a subir.
  * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
  */
-module.exports.uploadFileFromPath = async (fullFileName) => {
+module.exports.uploadFileFromPath = async (context, fullFileName) => {
 
     try {
 
-        console.log('SUBIENDO ARCHIVO A BLOB STORAGE');
+        context.log('SUBIENDO ARCHIVO A BLOB STORAGE');
 
         /** DEFINIR NOMBRE DEL ARCHIVO A GUARDAR. */
         let fileName = path.basename(fullFileName);
@@ -131,11 +131,11 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
  * @param {Json} file: Json que contiene la url del archivo local y el nombre del archivo.
  * @return {Json}: Respuesta JSON de la función que retorna el resultado del envío del email, incluye respuesta satisfactoria o fallo.
  */
-module.exports.sendEmail = async (file) => {
+module.exports.sendEmail = async (context, file) => {
 
     try {
 
-        console.log('ENVIANDO ARCHIVO POR CORREO');
+        context.log('ENVIANDO ARCHIVO POR CORREO');
 
         if (!file.url)
             throw 'No se ha podido obtener la url del archivo.';
@@ -206,11 +206,11 @@ module.exports.sendEmail = async (file) => {
  * Eliminar directorio de carpeta temporal.
  * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports.deleteFolder = async () => {
+module.exports.deleteFolder = async (context) => {
 
     try {
 
-        console.log('ELIMINANDO DIRECTORIO TEMPORAL');
+        context.log('ELIMINANDO DIRECTORIO TEMPORAL');
 
         /** ELIMINAR CARPETA TEMPORALES. */
         fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });

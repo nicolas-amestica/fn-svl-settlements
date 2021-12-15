@@ -9,27 +9,27 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
-    let data = await business.getDataGcp();
+    let data = await business.getDataGcp(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** EXPORTAR DATA A ARCHIVO XLSX. */
-    data = await business.exportToXlsxFromObject(data, process.env.N_INFORME_SKU_FILE);
+    data = await business.exportToXlsxFromObject(context, data, process.env.N_INFORME_SKU_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-    data = await business.uploadFileFromPath(data)
+    data = await business.uploadFileFromPath(context, data)
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ENVIAR EMAIL CON ENLACE DE DESCARGA DEL ARCHIVO. */
-    data = await business.sendEmail(data)
+    data = await business.sendEmail(context, data)
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-    const deleted = await business.deleteFolder()
+    const deleted = await business.deleteFolder(context)
     if (deleted.error)
         return context.res = Responses._400({ error: deleted.error });
 

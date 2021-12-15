@@ -9,11 +9,11 @@ const DateFormat = require('dateformat');
  * Obtiene los folios desde la base de datos de finanzas.
  * @return {Json}: Respuesta JSON que contiene data y name de folios pendientes y sin sku, si falla retorna excepción.
  */
-module.exports.getDataFinance = async () => {
+module.exports.getDataFinance = async (context) => {
 
     try {
 
-        console.log('OBTENIENDO INFORMACIÓN');
+        context.log('OBTENIENDO INFORMACIÓN');
 
         /** QUERY. */
         const query = `SELECT folio, CASE WHEN fulfillment_type IS NULL THEN 'null' WHEN fulfillment_type = '' THEN 'null' ELSE fulfillment_type END AS 'fulfillment_type', CASE WHEN category IS NULL THEN 'null' WHEN category = '' THEN 'null' ELSE category END AS 'category', sku FROM sales WHERE origin = 'SVL' AND folio NOT IN ('0', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10', '-11') AND quantity > 0 AND (closeout_number = 0 OR closeout_number IS NULL)`;
@@ -48,11 +48,11 @@ module.exports.getDataFinance = async () => {
  * @param {Json} data: Objeto que contiene propiedades data y name.
  * @return {[Json]}: Retorna JSON con nombre y ruta del archivo creado, si falla retorna excepción.
  */
-module.exports.exportToCSV = async (data) => {
+module.exports.exportToCSV = async (context, data) => {
 
     try {
 
-        console.log('EXPORTANDO DATOS A CSV');
+        context.log('EXPORTANDO DATOS A CSV');
 
         /** VALIDAR QUE LA VARIABLE DATA TENGA CONTENIDO. */
         if (Object.keys(data.data).length == 0)
@@ -85,11 +85,11 @@ module.exports.exportToCSV = async (data) => {
  * @param {String} filePath: Variable que contiene la ruta del archivo csv.
  * @return {Json}: Retorna JSON con resultado del proceso de bigquery.
  */
-module.exports.updateGCP = async (filePath) => {
+module.exports.updateGCP = async (context, filePath) => {
 
     try {
 
-        console.log('ACTUALIZANDO DATOS EN GCP');
+        context.log('ACTUALIZANDO DATOS EN GCP');
 
         /** VALIDAR QUE LA VARIABLE DE ENTRADA TENGA CONTENIDO. */
         if (filePath.length == 0)
@@ -138,11 +138,11 @@ module.exports.updateGCP = async (filePath) => {
  * Eliminar directorio de carpeta temporal.
  * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports.deleteFolder = async () => {
+module.exports.deleteFolder = async (context) => {
 
     try {
 
-        console.log('ELIMINANDO DIRECTORIO TEMPORAL');
+        context.log('ELIMINANDO DIRECTORIO TEMPORAL');
 
         /** ELIMINAR CARPETA TEMPORALES. */
         fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });

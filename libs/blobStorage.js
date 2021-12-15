@@ -33,7 +33,7 @@ module.exports.uploadFileFromLocal = async (containerName, fileName, filePath) =
 
     } catch (error) {
 
-        /** CAPTURA EXCEPCIÓN. */
+        /** RETORNA EXCEPCIÓN. */
         return { error }
 
     }

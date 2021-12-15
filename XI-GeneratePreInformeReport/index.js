@@ -15,22 +15,22 @@ module.exports = async function (context, req) {
         return context.res = Responses._400({ error: data })
 
     /** GENERAR INFORME. */
-    data = await business.exportToXlsx(data);
+    data = await business.exportToXlsx(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data });
 
     /** SUBIR INFORME. */
-    data = await business.uploadFileFromPath(data);
+    data = await business.uploadFileFromPath(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data });
     
     /** ENVIAR CORREO. */
-    data = await business.sendEmail(data);
+    data = await business.sendEmail(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data });
 
     /** ELIMINAR DIRECTORIO TEMPORAL. */
-    let deleted = await business.deleteFile();
+    let deleted = await business.deleteFile(context);
     if (deleted.error)
         return context.res = Responses._400({ error: deleted });
 

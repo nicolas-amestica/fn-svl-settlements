@@ -10,16 +10,16 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE FINANZAS. */
-    let data = await business.getDataFinance();
+    let data = await business.getDataFinance(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
-    data = await business.getDataUser(data);
+    data = await business.getDataUser(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ACTUALIZAR DATA EN FINANZAS. */
-    data = await business.updateInternationalSales(data);
+    data = await business.updateInternationalSales(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 

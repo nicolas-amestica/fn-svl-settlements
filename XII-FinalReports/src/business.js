@@ -11,11 +11,11 @@ const path = require('path');
  * Obtiene los folios pendientes de finanzas.
  * @return {Json}: Retorna data y nombre en un objeto, si falla retorna excepción.
  */
-module.exports.getDataPending = async () => {
+module.exports.getDataPending = async (context) => {
 
     try {
 
-        console.log('OBTENIENDO INFORMACIÓN DE FOLIOS PENDIENTES');
+        context.log('OBTENIENDO INFORMACIÓN DE FOLIOS PENDIENTES');
 
         /** QUERY. */
         let query = `SELECT sl.id, sl.closeout_number, sl.term, sl.rut, sl.quantity, sl.sku, REPLACE(REPLACE(REPLACE(TRIM(REPLACE(sk.seller_sku, '''', '')), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS seller_sku, REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(sk.product_name, '''', ''), ';', ' '), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS description, sl.percentage, sl.gross_sale_income, sl.IVA_gross_income, sl.net_sale_income, sl.commission_value, sl.net_sale_to_bill, sl.IVA_to_bill, sl.gross_income_to_bill, sl.folio, CONVERT(VARCHAR, sl.createdAt, 120) AS createdAt, CONVERT(VARCHAR, sl.updatedAt, 120) AS updatedAt, CONVERT(VARCHAR, sl.date_of_sale, 120) AS date_of_sale, CONVERT(VARCHAR, sl.reception_time, 120) AS reception_time, sl.category, sl.origin, sl.fulfillment_type, sl.purchase_order, sl.sales_commission, sl.discount_value, sl.discounted_commission, sl.total_commission, REPLACE(REPLACE(REPLACE(REPLACE(sl.ticket_number, ';', ' '), CHAR(9), ''), CHAR(10), ''), CHAR(13), '') AS ticket_number, sl.international, sl.business, sl.country FROM sales sl LEFT JOIN skus sk ON sl.sku = sk.sku WHERE sl.origin = 'SVL' AND sl.folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND sl.quantity > 0 AND (sl.closeout_number = 0 OR sl.closeout_number IS NULL) AND sl.international = 0`;
@@ -30,6 +30,7 @@ module.exports.getDataPending = async () => {
         if (con.error)
             throw con.error
 
+        /** RETORNO RESPUESTA. */
         return data
 
     } catch (error) {
@@ -45,12 +46,12 @@ module.exports.getDataPending = async () => {
  * Obtiene las ventas liquidadas de finanzas.
  * @return {Json}: Retorna data y nombre en un objeto, si falla retorna excepción.
  */
-module.exports.getDataSales = async () => {
+module.exports.getDataSales = async (context) => {
 
     try {
 
         /** CREAR CONEXIÓN A BASE DE DATOS mySQL. */
-        console.log('OBTENIENDO INFORMACIÓN DE VENTAS LIQUIDADAS');
+        context.log('OBTENIENDO INFORMACIÓN DE VENTAS LIQUIDADAS');
 
         /** QUERY. */
         let query = `
@@ -142,6 +143,7 @@ module.exports.getDataSales = async () => {
         if (con.error)
             throw con.error;
 
+        /** RETORNO RESPUESTA. */
         return data
 
     } catch (error) {
@@ -157,12 +159,12 @@ module.exports.getDataSales = async () => {
  * Obtiene los sellers liquidados de finanzas.
  * @return {Json}: Retorna data y nombre en un objeto, si falla retorna excepción.
  */
-module.exports.getDataSellers = async () => {
+module.exports.getDataSellers = async (context) => {
 
     try {
 
         /** CREAR CONEXIÓN A BASE DE DATOS MYSQL. */
-        console.log('OBTENIENDO INFORMACIÓN DE SELLERS LIQUIDADOS');
+        context.log('OBTENIENDO INFORMACIÓN DE SELLERS LIQUIDADOS');
 
         /** QUERY. */
         const query = `
@@ -197,6 +199,7 @@ module.exports.getDataSellers = async () => {
         if (con.error)
             throw con.error;
 
+        /** RETORNO RESPUESTA. */
         return data
 
     } catch (error) {
@@ -213,11 +216,11 @@ module.exports.getDataSellers = async () => {
  * @param {Json} data: Objeto que contiene propiedades data y name.
  * @return {[Json]}: Retorna arreglo con nombres de los archivos creados (incluyento url), si falla retorna excepción.
  */
-module.exports.exportToCSV = async (data, name) => {
+module.exports.exportToCSV = async (context, data, name) => {
 
     try {
 
-        console.log('EXPORTANDO DATA A CSV');
+        context.log('EXPORTANDO DATA A CSV');
 
         /** VALIDAR QUE LA VARIABLE DATA TENGA CONTENIDO. */
         if (Object.keys(data).length == 0)
@@ -254,11 +257,11 @@ module.exports.exportToCSV = async (data, name) => {
  * @param {String} fileName: Nombre del archivo a generar.
  * @return {String}: Respuesta String que indica la ruta y nombre del archivo que se generó, si falla envía una expceción.
  */
-module.exports.exportToXlsxFromObject = async (data, fileName) => {
+module.exports.exportToXlsxFromObject = async (context, data, fileName) => {
 
     try {
 
-        console.log('EXPORTANDO DATA A XLSX');
+        context.log('EXPORTANDO DATA A XLSX');
 
         /** VALIDAR QUE LA VARIABLE DAT TENGA CONTENIDO. */
         if (data.length == 0)
@@ -294,11 +297,11 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
  * @param {String} fullFileName: Nombre del archivo a subir.
  * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
  */
-module.exports.uploadFileFromPath = async (fullFileName) => {
+module.exports.uploadFileFromPath = async (context, fullFileName) => {
 
     try {
 
-        console.log('SUBIENDO ARCHIVO A BLOB STORAGE');
+        context.log('SUBIENDO ARCHIVO A BLOB STORAGE');
 
         /** DEFINIR NOMBRE DEL ARCHIVO A GUARDAR. */
         let fileName = path.basename(fullFileName.path);
@@ -325,11 +328,11 @@ module.exports.uploadFileFromPath = async (fullFileName) => {
  * @param {[Json]} urlFiles: Arreglo de objeto con los datos (incluyendo la url) subidos al Blob Storage.
  * @return {Json}: Respuesta JSON de la función que retorna el resultado del envío del email, incluye respuesta satisfactoria o fallo.
  */
-module.exports.sendEmail = async (urlFiles) => {
+module.exports.sendEmail = async (context, urlFiles) => {
 
     try {
 
-        console.log('ENVIANDO CORREO');
+        context.log('ENVIANDO CORREO');
 
         let urlTag = [];
 
@@ -407,11 +410,11 @@ module.exports.sendEmail = async (urlFiles) => {
  * Eliminar directorio de carpeta temporal.
  * @return {boolean}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
-module.exports.deleteFolder = async () => {
+module.exports.deleteFolder = async (context) => {
 
     try {
 
-        console.log('ELIMINANDO DIRECTORIO TEMPORAL');
+        context.log('ELIMINANDO DIRECTORIO TEMPORAL');
 
         /** ELIMINAR CARPETA TEMPORALES. */
         fs.rmdirSync(process.env.TMP_FOLDER, { recursive: true });

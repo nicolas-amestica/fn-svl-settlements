@@ -86,7 +86,7 @@ module.exports.sendFromGmail = async (mailOpt, hbsOpt) => {
 
     } catch (error) {
 
-        /** CAPTURA EXCEPCIÓN. */
+        /** RETORNA EXCEPCIÓN. */
         return { error }
 
     }

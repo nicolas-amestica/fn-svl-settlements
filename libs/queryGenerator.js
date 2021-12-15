@@ -31,8 +31,7 @@ module.exports.inQueryGenerator = async (data) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error };
 
     }
@@ -59,8 +58,7 @@ module.exports.inQueryGeneratorString = async (data) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error }
 
     }
@@ -103,8 +101,7 @@ module.exports.divideScriptByRut = async (salesGroup) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error }
 
     }
@@ -137,8 +134,7 @@ module.exports.divideScriptByGroup = async (data, longitud) => {
 
     } catch (error) {
 
-        /** CAPTURA ERROR. */
-        console.log(error);
+        /** RETORNA EXCEPCIÓN. */
         return { error }
 
     }
@@ -172,8 +168,8 @@ module.exports.objectToStringByIdentifier = async (object, identity) => {
         return cadena
 
     } catch (error) {
-        
-        console.log(error);
+
+        /** RETORNA EXCEPCIÓN. */
         return { error }
 
     }

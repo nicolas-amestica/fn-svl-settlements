@@ -12,10 +12,7 @@ module.exports = async function (context, req) {
     /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
     let data = await management.getDataGcp(context);
     if (data.error == undefined) {
-        context.res = Responses._400({
-            error: data
-        })
-    }
+        return context.res = Responses._400({ error: data }) }
 
     /** RETORNO DE RESPUESTA. */
     context.res = Responses._200({

@@ -6,7 +6,7 @@ const dateFormat = require('dateformat');
 const email = require('../../libs/email');
 
 /**
- * Obtiene datos de GCP, genera archivo y envía emails.
+ * Obtiene datos de GCP, genera archivo y envía correo.
  * @param {Json} context: Json que contiene el contexto del azure function.
  * @return {Json}: Respuesta JSON que contiene respuesta del resultado de proceso, si falla retorna excepción.
  */
@@ -14,9 +14,7 @@ module.exports.getDataGcp = async (context) => {
 
     try {
 
-        /**
-         * BigQuerys a GCP
-         */
+        /** BIGQUERYS */
         const sql_folios_recepcionados = `WITH maestro_ordenes AS (SELECT DISTINCT(folio) AS folio, RECEPCIONADA, FECHA_RECEPCION AS recepcion, MODALIDAD AS tipo_abastecimiento, ESTADO_DO AS estado_do, FECHA_COMPRA FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado=0) SELECT DISTINCT(svl_finanzas.folio) AS folio, CASE svl_finanzas.fulfillment_type WHEN 'null' THEN null ELSE svl_finanzas.fulfillment_type END AS fulfillment_type, maestro_ordenes.tipo_abastecimiento, maestro_ordenes.estado_do, maestro_ordenes.recepcion FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas AS svl_finanzas LEFT JOIN maestro_ordenes ON maestro_ordenes.folio = svl_finanzas.folio`;
         const sql_categorias_dwh = `WITH db_mrk_productos AS( SELECT Distinct(ID_SKU) AS id_sku, ID_SUBCLASE FROM flb-rtl-dtl-marketplace-corp.datalake_retail.dbmark_lk_productos_inv WHERE CTIP_PRD = 'L' AND DATE(_PARTITIONTIME) > date_sub(current_date, interval 5 day)) SELECT db_mrk_productos.ID_SKU AS id_sku, db_mrk_productos.ID_SUBCLASE AS id_subclase, svl_finanzas.folio AS folio, svl_finanzas.fulfillment_type AS fulfillment_type FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas AS svl_finanzas JOIN db_mrk_productos ON svl_finanzas.sku = db_mrk_productos.ID_SKU WHERE svl_finanzas.category = 'null'`;
         const sql_folios_faltantes = `SELECT DISTINCT(folio), '' AS svl_abast, MODALIDAD AS OMS_ABAST, CASE WHEN fecha_recepcion IS NULL THEN DATE(fecha_compra) ELSE FECHA_RECEPCION END AS RECEPCION, ESTADO_DO, FECHA_COMPRA FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado=0 AND RECEPCIONADA=1 UNION ALL SELECT DISTINCT(folio), '' AS svl_abast, MODALIDAD AS OMS_ABAST, CASE WHEN fecha_recepcion IS NULL THEN DATE(fecha_compra) ELSE FECHA_RECEPCION END AS RECEPCION, ESTADO_DO, FECHA_COMPRA FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado=0 AND estado_svl IN ('delivered','sent','outForDelivery') AND modalidad_svl ='cross_docking_with_3pl' UNION ALL SELECT DISTINCT(folio), '' AS svl_abast, MODALIDAD AS OMS_ABAST, CASE WHEN fecha_recepcion IS NULL THEN DATE(fecha_compra) ELSE FECHA_RECEPCION END AS RECEPCION, ESTADO_DO, FECHA_COMPRA FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado=0 AND MODALIDAD IN ('FBF') AND FECHA_SALIDA_FBF IS NOT NULL`;
@@ -25,7 +23,7 @@ module.exports.getDataGcp = async (context) => {
         const categorias_dwh = { query: sql_categorias_dwh, location: 'US', preserveNulls: true };
         const folios_faltantes = { query: sql_folios_faltantes, location: 'US', preserveNulls: true };
 
-        /* Declarar variables a excel */
+        /* VARIABLES PARA LA CONSTRUCCIÓN DEL EXCEL */
         let i = 2;
         let ii = 2;
         let iii = 2;
@@ -46,15 +44,18 @@ module.exports.getDataGcp = async (context) => {
         let pendienteToArray = [];
         let sindespachoToArray = [];
 
-        /* INICIO PROMESA PRINCIPAL CONEXION */
-        console.log("Ejecutando BigQuerys");
+        /* INICIO PROMESA PRINCIPAL CONEXION A GCP */
+        context.log("EJECUTANDO BIGQUERYS");
+
         const [rsin] = await gcp.select(categorias_dwh);
         const [rs] = await gcp.select(folios_recepcionados);
         const [rsfa] = await gcp.select(folios_faltantes);
         
-        console.log("Creando excel");
+        context.log("CREANDO EXCEL");
+
         let workbook = await XlsxPopulate.fromBlankAsync();
 
+        /* HEADERS EXCEL INICIO */
         const newSheet = workbook.addSheet('Total');
         newSheet.cell("A1").value("FOLIO");
         newSheet.cell("B1").value("SVL_ABAST");
@@ -99,11 +100,11 @@ module.exports.getDataGcp = async (context) => {
         newSheet5.cell("A1").value("FOLIO");
         newSheet5.cell("B1").value("SKU");
         newSheet5.cell("C1").value("CATEGORY");
-        /* HEADERS FIN */
+        /* HEADERS EXCEL FIN */
 
         /* INICIO RECORRIDO POR FOLIO */
-        console.log("ASYNC");
-        // TOTAL
+        context.log("RECORRIENDO RS 1/3");
+
         async.eachSeries(rs, (data, callback) => {
 
             let folio = data.folio.c.join("");
@@ -182,10 +183,14 @@ module.exports.getDataGcp = async (context) => {
             i++;
             callback();
         }, (err, results) => {
-            console.log("ASYNC 2");
+            
+            context.log("RECORRIENDO RSFA 2/3");
+
             async.eachSeries(rsfa, (data, callback) => {
+
                 folio = data.folio;
                 recepcion = data.RECEPCION.value.replace('T', ' ').substr(0, 19);
+
                 //PENDIENTES
                 if (!pendienteArray.includes(folio.toString())) {
 
@@ -221,7 +226,9 @@ module.exports.getDataGcp = async (context) => {
 
                 callback();
             }, (err, results) => {
-                console.log("ASYNC 3");
+
+                context.log("RECORRIENDO RSIN 3/3");
+
                 async.eachSeries(rsin, (data, callback) => {
                     let folio = data.folio.c.join("");
                     let sku = data.id_sku.c.join("");
@@ -233,8 +240,11 @@ module.exports.getDataGcp = async (context) => {
 
                     callback();
                 }, async (err, results) => {
+
+                        /** ELIMINAR HOJA */
                         workbook.deleteSheet("Sheet1");
-                        console.log("Generando reporte en base64.");
+
+                        context.log("GENERANDO REPORTE EN BASE64.");
 
                         await workbook.outputAsync().
                             then(async (data) => {
@@ -247,7 +257,7 @@ module.exports.getDataGcp = async (context) => {
                                  * Enviar erchivo por email.
                                 */
 
-                                console.log("Enviando reporte GCP por email.");
+                                context.log("ENVIANDO REPORTE GCP POR CORREO.");
 
                                 /** CONFIGURAR PARÁMETROS DEL EMAIL. */
                                 let configEmail = {
@@ -278,7 +288,7 @@ module.exports.getDataGcp = async (context) => {
                                 /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
                                 let result = await email.sendFromGmail(configEmail, optionsHBS);
                                 if (result.errno) {
-                                    console.log('No se pudo enviar el email.');
+                                    context.log('No se pudo enviar el email.');
                                     throw error;
                                 }
                         })
@@ -288,11 +298,12 @@ module.exports.getDataGcp = async (context) => {
 
         });
 
+        /** RETORNO RESPUESTA */
         return "OK"
 
     } catch (error) {
 
-        console.log(error);
+        /** RETORNO EXCEPCIÓN */
         return { error }
 
     }

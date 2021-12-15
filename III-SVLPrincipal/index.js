@@ -10,22 +10,22 @@ const business = require('./src/business');
  module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE FINANZAS. */
-    let data = await business.getDataFinance();
+    let data = await business.getDataFinance(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** EXPORTAR DATA A ARCHIVO CSV. */
-    data = await business.exportToCSV(data);
+    data = await business.exportToCSV(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** INSERTAR DATA DE ARCHIVO CSV A BIGQUERY. */
-    data = await business.updateGCP(data.path);
+    data = await business.updateGCP(context, data.path);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-    const deleteFolder = await business.deleteFolder()
+    const deleteFolder = await business.deleteFolder(context)
     if (deleteFolder.error)
         return context.res = Responses._400({ error: deleteFolder.error });
 

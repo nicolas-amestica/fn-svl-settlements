@@ -7,11 +7,11 @@ const GroupBy = require('lodash.groupby');
  * Obtiene los folios desde la base de datos de finanzas.
  * @return {[Json]}: Respuesta JSON que contiene data y name de folios pendientes y sin sku, si falla retorna excepción.
  */
-module.exports.getDataFinance = async () => {
+module.exports.getDataFinance = async (context) => {
 
     try {
 
-        console.log('OBTENIENDO RUT VENTAS DE FINANZAS');
+        context.log('OBTENIENDO RUT VENTAS DE FINANZAS');
 
         /** QUERY. */
         const query = `SELECT DISTINCT rut AS RUT FROM sales WHERE origin = 'SVL' AND folio NOT IN ('0', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10', '-11') AND quantity > 0 AND (closeout_number = 0 OR closeout_number IS NULL) AND (international = -1 OR international IS NULL)`;
@@ -42,11 +42,11 @@ module.exports.getDataFinance = async () => {
  * @param {[Json]} objRuts: Arreglo de objetos con rut a consultar indicando si son companies nacionales o internacionales.
  * @return {json}: Respuesta JSON de la función que retorna el resultado del mapeo de rut nacionales e internacionales, incluye respuesta satisfactoria o fallo.
  */
-module.exports.getDataUser = async (objRuts) => {
+module.exports.getDataUser = async (context, objRuts) => {
 
     try {
 
-        console.log('OBTENIENDO SELLERS');
+        context.log('OBTENIENDO SELLERS');
 
         /** QUERY. */
         const query = `SELECT companies.rut AS RUT, CASE WHEN companies.svl_country_id = communes.country_id THEN 0 ELSE 1 END AS INTERNATIONAL FROM companies, communes WHERE companies.deleted_At IS NULL AND companies.commune_id = communes.id AND companies.rut IN (${(await QueryGenerator.inQueryGenerator(objRuts)).replace(/["]+/g, '')})`;
@@ -81,11 +81,11 @@ module.exports.getDataUser = async (objRuts) => {
  * @param {[Json]} internationalSales: Arreglo de objetos con ventas indicando si son nacionales o internacionales.
  * @return {json}: Respuesta JSON de la función que retorna el resultado de la actualización del campo international de las ventas, si falla retorna excepción.
  */
-module.exports.updateInternationalSales = async (internationalSales) => {
+module.exports.updateInternationalSales = async (context, internationalSales) => {
 
     try {
 
-        console.log('ACTUALIZANDO VENTAS');
+        context.log('ACTUALIZANDO VENTAS');
 
         /** AGRUPAR VENTAS POR CAMPO INTERNATIONAL. */
         let groups = GroupBy(internationalSales , 'INTERNATIONAL');
@@ -109,7 +109,7 @@ module.exports.updateInternationalSales = async (internationalSales) => {
                         query = `UPDATE sales SET international = ${international} WHERE RUT IN (${await QueryGenerator.objectToStringByIdentifier(dividerSale, "RUT")}) AND folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND quantity > 0 AND (closeout_number IS NULL OR closeout_number = 0) AND origin = 'SVL' AND (international = -1 OR international IS NULL)`;
                         result = await MySQL.updateSale(query);
                         cont++
-                        console.log(`* Ventas ${international} (${cont}): ${result} updated.`);
+                        context.log(`* Ventas ${international} (${cont}): ${result} updated.`);
 
                         if (result.error)
                             throw result.error;
@@ -118,7 +118,7 @@ module.exports.updateInternationalSales = async (internationalSales) => {
             } else {
                 query = `UPDATE sales SET international = ${international} WHERE RUT IN (${await QueryGenerator.objectToStringByIdentifier(groups[international], "RUT")}) AND folio NOT IN ('0','-1','-2','-3','-4','-5','-6','-7','-8','-9','-10','-11') AND quantity > 0 AND (closeout_number IS NULL OR closeout_number = 0) AND origin = 'SVL' AND (international = -1 OR international IS NULL)`;
                 result = await MySQL.updateSale(query);
-                console.log(`Ventas ${international}: ${result} updated.`);
+                context.log(`Ventas ${international}: ${result} updated.`);
                 cont++
 
                 if (result.error)

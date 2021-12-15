@@ -10,12 +10,12 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE GOOGLE CLOUD PLATFORM. */
-    let data = await business.getDataGcp();
+    let data = await business.getDataGcp(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ACTUALIZAR DATA EN FINANZAS. */
-    data = await business.updateData(data);
+    data = await business.updateData(context, data);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 

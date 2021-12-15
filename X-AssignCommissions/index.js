@@ -10,27 +10,27 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER DATOS DE VENTAS SIN CATEGORÍAS. */
-    let data = await business.getFoliosIdWithoutCategory();
+    let data = await business.getFoliosIdWithoutCategory(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ACTUALIZAR VENTAS SIN CATEGORÍAS. */
-    let foliosWithoutCategory = await business.updateFoliosIdWithoutCategory(data);
+    let foliosWithoutCategory = await business.updateFoliosIdWithoutCategory(context, data);
     if (foliosWithoutCategory.error)
         return context.res = Responses._400({ error: foliosWithoutCategory.error });
 
     /** OBTENER DATOS VENTAS SIN PRODUCT COM. */
-    data = await business.getFoliosIdsWithoutProductCOM();
+    data = await business.getFoliosIdsWithoutProductCOM(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** ACTUALIZAR VENTAS SIN PRODUCT COM. */
-    let foliosWithoutProductCOM = await business.updateFoliosIdsWithoutProductCOM(data);
+    let foliosWithoutProductCOM = await business.updateFoliosIdsWithoutProductCOM(context, data);
     if (foliosWithoutProductCOM.error)
         return context.res = Responses._400({ error: foliosWithoutProductCOM.error });
 
     /** ACTUALIZAR VENTAS SIN PRODUCT COM. */
-    data = await business.assignCommissions();
+    data = await business.assignCommissions(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 

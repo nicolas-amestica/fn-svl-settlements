@@ -8,9 +8,12 @@ const MySQL = require('../../libs/mySQL')
  * Obtiene datos de GCP.
  * @return {Json}: Respuesta JSON que contiene respuesta del resultado de proceso, si falla retorna excepción.
  */
-module.exports.getDataGcp = async () => {
+module.exports.getDataGcp = async (context) => {
 
     try {
+
+        /* EJECUTAR BIGQUERYS */
+        context.log("OBTENIENDO INFORMACIÓN DE GCP");
 
         /* BIGQUERYS */
         const sql_folios_recepcionados = `WITH maestro_ordenes AS( SELECT Distinct(folio) as folio, RECEPCIONADA, FECHA_RECEPCION as recepcion, MODALIDAD as tipo_abastecimiento, ESTADO_DO as estado_do, FECHA_COMPRA FROM flb-rtl-dtl-marketplace-corp.data_studio.maestro_ordenes WHERE DELIVERYSTART > "2020-01-01" AND liquidado=0 ) SELECT Distinct(svl_finanzas.folio) as folio, CASE svl_finanzas.fulfillment_type WHEN 'null' THEN null ELSE svl_finanzas.fulfillment_type END AS fulfillment_type, maestro_ordenes.tipo_abastecimiento, maestro_ordenes.estado_do, maestro_ordenes.recepcion FROM flb-rtl-dtl-marketplace-corp.pago_seller._svl_finanzas as svl_finanzas LEFT JOIN maestro_ordenes ON maestro_ordenes.folio = svl_finanzas.folio`;
@@ -23,15 +26,11 @@ module.exports.getDataGcp = async () => {
         let sindespachoArray2 = [];
         let sindespachoToArray = [];
 
-        /* EJECUTAR BIGQUERYS */
-        console.log("EJECUTANDO BIGQUERY");
-
-        // const [rsin] = await gcp.select(categorias_dwh);
         const [rs] = await GCP.select(folios_recepcionados);
         const [rsfa] = await GCP.select(folios_faltantes);
 
         /* INICIO RECORRIDO POR FOLIO */
-        console.log("INICIO LECTURA DE DATA OBTENIDA");
+        context.log("INICIO LECTURA DE DATA OBTENIDA");
 
         /* ITERACIÓN DATA RS */
         for (const data of rs) {
@@ -75,6 +74,7 @@ module.exports.getDataGcp = async () => {
 
     } catch (error) {
 
+        /* RETORNO EXCEPCIÓN */
         return { error }
 
     }
@@ -86,16 +86,16 @@ module.exports.getDataGcp = async () => {
  * @param {[Json]} data: Arreglo de objeto que tiene la información de ventas.
  * @return {Json}: Respuesta JSON que contiene respuesta del resultado de proceso, si falla retorna excepción.
  */
-module.exports.updateData = async (data) => {
+module.exports.updateData = async (context, data) => {
 
     try {
 
-        console.log('AGRUPANDO VENTAS');
+        context.log('AGRUPANDO VENTAS');
 
         /** AGRUPAR FOLIOS POR CAMPO TIPO DESPACHO. */
         let groups = await GroupBy(data, 'tipo_abastecimiento');
 
-        console.log('ACTUALIZANDO VENTAS');
+        context.log('ACTUALIZANDO VENTAS');
 
         cont = 0;
 
@@ -110,12 +110,12 @@ module.exports.updateData = async (data) => {
             if (groups[sale].length > divider) {
                 divide = await QueryGenerator.divideScriptByGroup(groups[sale], divider);
                 if (divide.length > 1) {
-                    console.log(`Ventas ${sale} tiene ${divide.length} grupos a ejecutar con un total de ${groups[sale].length} ventas.`);
+                    context.log(`Ventas ${sale} tiene ${divide.length} grupos a ejecutar con un total de ${groups[sale].length} ventas.`);
                     for (const dividerSale of divide) {
                         query = `UPDATE sales SET fulfillment_type = '${sale}', updatedAt = getDate() WHERE folio IN (${await QueryGenerator.objectToStringByIdentifier(dividerSale, "folio")}) AND (closeout_number IS NULL OR closeout_number = 0) AND origin = 'SVL'`;
                         result = await MySQL.updateSale(query);
                         cont++
-                        console.log(`* ${sale}(${cont}): ${result} updated.`);
+                        context.log(`* ${sale}(${cont}): ${result} updated.`);
 
                         if (result.error)
                             throw result.error;
@@ -124,7 +124,7 @@ module.exports.updateData = async (data) => {
             } else {
                 query = `UPDATE sales SET fulfillment_type = '${sale}', updatedAt = getDate() WHERE folio IN (${await QueryGenerator.objectToStringByIdentifier(dividerSale, "folio")}) AND (closeout_number IS NULL OR closeout_number = 0) AND origin = 'SVL'`;
                 result = await MySQL.updateSale(query);
-                console.log(`${sale}: ${result} updated.`);
+                context.log(`${sale}: ${result} updated.`);
                 cont++
 
                 if (result.error)

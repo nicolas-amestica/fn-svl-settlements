@@ -41,7 +41,7 @@ module.exports.insertDataFromLocalFile = async (options) => {
 
     } catch (error) {
 
-        /** CAPTURA EXCEPCIÓN. */
+        /** RETORNA EXCEPCIÓN. */
         return { error };
 
     }
@@ -67,13 +67,13 @@ module.exports.select = async (options) => {
         const response = await bigquery.createQueryJob(options);
         const job = response[0];
         const rows = await job.getQueryResults(job);
-        
+
         /** RETORNA RESPUESTA. */
         return [rows][0];
 
     } catch (error) {
 
-        /** CAPTURA EXCEPCIÓN. */
+        /** RETORNA EXCEPCIÓN. */
         return { error };
 
     }

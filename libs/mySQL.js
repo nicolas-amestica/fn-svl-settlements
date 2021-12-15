@@ -15,19 +15,6 @@ let configFinanzas = {
     }
 };
 
-let configFinanzasTEST = {
-    server: process.env.DB_TEST_HOST_FINANCES_HOST,
-    database: process.env.DB_TEST_HOST_FINANCES_DBNAME,
-    user: process.env.DB_TEST_HOST_FINANCES_USER,
-    password: process.env.DB_TEST_HOST_FINANCES_PASSWORD,
-    multipleStatements: true,
-    requestTimeout: 180000,
-    options: {
-        encrypt: true,
-        enableArithAbort: true
-    }
-};
-
 /** VARIABLE QUE CONFIGURA LAS VARIABLES DE CONEXIÓN. */
 let configUsuarios = {
     server: process.env.DB_HOST_USERS_HOST,
@@ -225,7 +212,7 @@ module.exports.getDataUsers = async (query) => {
  * @param {String} query: String que contiene la query a ejecutar.
  * @return {String}: Respuesta de la función con la información procesada en la function, incluye respuesta satisfactoria o fallo.
  */
- module.exports.closeConnection = async () => {
+module.exports.closeConnection = async () => {
 
     try {
 

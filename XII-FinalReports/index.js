@@ -9,57 +9,57 @@ const business = require('./src/business');
 module.exports = async function (context, req) {
 
     /** OBTENER FOLIOS PENDIENTES DE FINANZAS. */
-    let data = await business.getDataPending();
+    let data = await business.getDataPending(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
     
     /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-    data = await business.exportToCSV(data, process.env.N_PENDIENTES_LIQUIDAR_FILE);
+    data = await business.exportToCSV(context, data, process.env.N_PENDIENTES_LIQUIDAR_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-    let getDataPending = await business.uploadFileFromPath(data)
+    let getDataPending = await business.uploadFileFromPath(context, data)
     if (getDataPending.error)
         return context.res = Responses._400({ error: getDataPending.error });
 
     /** OBTENER VENTAS LIQUIDADAS DE FINANZAS. */
-    data = await business.getDataSales();
+    data = await business.getDataSales(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-    data = await business.exportToCSV(data, process.env.N_SALES_FILE);
+    data = await business.exportToCSV(context, data, process.env.N_SALES_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-    let getDataSales = await business.uploadFileFromPath(data)
+    let getDataSales = await business.uploadFileFromPath(context, data)
     if (getDataSales.error)
         return context.res = Responses._400({ error: getDataSales.error });
 
     /** OBTENER SELLERS LIQUIDADOS DE FINANZAS. */
-    data = await business.getDataSellers();
+    data = await business.getDataSellers(context);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** EXPORTAR DATOS A ARCHIVO CSV EN CARPETA TEMPORAL. */
-    data = await business.exportToCSV(data, process.env.N_SELLERS_FILE);
+    data = await business.exportToCSV(context, data, process.env.N_SELLERS_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
-    let getDataSellers = await business.uploadFileFromPath(data)
+    let getDataSellers = await business.uploadFileFromPath(context, data)
     if (getDataSellers.error)
         return context.res = Responses._400({ error: getDataSellers.error });
 
     /** ENVIAR EMAIL CON ENLACES DE DESCARGAS DE LOS ARCHIVOS. */
-    let resultSendEmail = await business.sendEmail({ getDataPending, getDataSales, getDataSellers })
+    let resultSendEmail = await business.sendEmail(context, { getDataPending, getDataSales, getDataSellers })
     if (resultSendEmail.error)
         return context.res = Responses._400({ error: resultSendEmail.error });
 
     /** ELIMINAR DIRECTORIO PARA ARCHIVOS TEMPORALES. */
-    data = await business.deleteFolder()
+    data = await business.deleteFolder(context)
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
