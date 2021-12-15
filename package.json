@@ -1,9 +1,8 @@
 {
   "name": "fn-svl-settlements",
   "version": "1.0.0",
-  "description": "Proyecto de automatización del proceso de liquidación",
+  "description": "Proyecto de automatización del proceso de liquidación parte 1",
   "scripts": {
-    "test": "echo \"No tests yet...\"",
     "start": "func start"
   },
   "author": "Nicolás Améstica Vidal",

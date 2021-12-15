@@ -55,4 +55,4 @@ deploy:prod:
     name: production
   when: manual
   only:
-    - master
+    - main
