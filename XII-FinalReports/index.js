@@ -18,6 +18,11 @@ module.exports = async function (context, req) {
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
+    /** COMPRIMIR ARCHIVO. */
+    data = await business.compressingFile(context, data);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error } );
+
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
     let getDataPending = await business.uploadFileFromPath(context, data)
     if (getDataPending.error)
@@ -33,6 +38,11 @@ module.exports = async function (context, req) {
     if (data.error)
         return context.res = Responses._400({ error: data.error });
 
+    /** COMPRIMIR ARCHIVO. */
+    data = await business.compressingFile(context, data);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error } );
+    
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
     let getDataSales = await business.uploadFileFromPath(context, data)
     if (getDataSales.error)
@@ -47,6 +57,11 @@ module.exports = async function (context, req) {
     data = await business.exportToCSV(context, data, process.env.N_SELLERS_FILE);
     if (data.error)
         return context.res = Responses._400({ error: data.error });
+
+    /** COMPRIMIR ARCHIVO. */
+    data = await business.compressingFile(context, data);
+    if (data.error)
+        return context.res = Responses._400({ error: data.error } );
 
     /** SUBIR ARCHIVO CSV AL BLOB STORAGE. */
     let getDataSellers = await business.uploadFileFromPath(context, data)

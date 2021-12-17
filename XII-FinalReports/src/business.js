@@ -253,6 +253,39 @@ module.exports.exportToCSV = async (context, data, name) => {
 }
 
 /**
+ * Comprimir archivo.
+ * @param {Json} context: Objeto de contexto Azure.
+ * @param {Json} data: Objeto que contiene las propiedades 'data' y 'path' del archivo.
+ * @return {json}: Respuesta JSON de la función que retorna el resultado del upload del archivo (incluye URL), incluye respuesta satisfactoria o fallo.
+ */
+module.exports.compressingFile = async (context, data) => {
+
+    try {
+
+        context.log('COMPRIMIENDO ARCHIVO');
+
+        /** VALIDAR QUE LA VARIABLE DATA TENGA CONTENIDO. */
+        if (!data.path)
+            throw 'No existe archivo para comprimir.';
+
+        /** ENVIAR A COMPRIMIR ARCHIVO. */
+        let resultado = await FileManager.compressingFile(data);
+        if (resultado.error)
+            throw resultado.error;
+
+        /** RETORNO RESPUESTA. */
+        return resultado;
+
+    } catch (error) {
+
+        /** CAPTURA EXCEPCIÓN. */
+        return { error }
+
+    }
+
+}
+
+/**
  * Exportar los datos de finanzas a un archivo csv. Este es almacenado en la carpeta temporal tmp ubicada en la raíz del proyecto.
  * @param {[Json]} data: Arreglo de objetos que contiene data, name y header.
  * @param {String} fileName: Nombre del archivo a generar.
@@ -350,52 +383,52 @@ module.exports.sendEmail = async (context, urlFiles) => {
         // let cc = process.env.SENDGRID_MAIL_CC;
         // let bcc = process.env.SENDGRID_MAIL_BCC;
 
-        /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        const message = {
-            from: from,
-            to: to.split(','),
-            subject: `PROCESO LIQUIDACIÓN ${DateFormat(new Date(), "yyyy-mm-dd")}`,
-            html: `Estimados,<br><br>
-            Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:<br><br>
-            1.- <a href='${urlTag[0].url}'>${urlTag[0].name}</a><br>
-            2.- <a href='${urlTag[1].url}'>${urlTag[1].name}</a><br>
-            3.- <a href='${urlTag[2].url}'>${urlTag[2].name}</a><br><br></br>    
-            Atte.<br>
-            ${process.env.NOMBRE_INFORMA}`,
-        }
-
-        /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        let result = await Email.sendFromSendgrid(message);
-        if (result.error)
-            throw result.error
-
         // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        // let configEmail = {
+        // const message = {
         //     from: from,
         //     to: to.split(','),
-        //     // cc: process.env.SENDGRID_MAIL_CC,
-        //     // bcc: process.env.SENDGRID_MAIL_BCC,
         //     subject: `PROCESO LIQUIDACIÓN ${DateFormat(new Date(), "yyyy-mm-dd")}`,
-        //     template: 'settlement',
-        //     context: {
-        //         dear: 'Estimados,',
-        //         message: 'Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:',
-        //         urlTag: urlTag,
-        //         greeting: 'Atte.',
-        //         sender: process.env.NOMBRE_INFORMA
-        //     }
-        // }
-
-        // /** CONFIGURAR PARÁMETROS DE HBS. */
-        // const optionsHBS = {
-        //     partialsDir: 'shared/views/email',
-        //     viewPath: '../shared/views/email'
+        //     html: `Estimados,<br><br>
+        //     Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:<br><br>
+        //     1.- <a href='${urlTag[0].url}'>${urlTag[0].name}</a><br>
+        //     2.- <a href='${urlTag[1].url}'>${urlTag[1].name}</a><br>
+        //     3.- <a href='${urlTag[2].url}'>${urlTag[2].name}</a><br><br></br>    
+        //     Atte.<br>
+        //     ${process.env.NOMBRE_INFORMA}`,
         // }
 
         // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        // let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        // let result = await Email.sendFromSendgrid(message);
         // if (result.error)
-        //     throw result.error;
+        //     throw result.error
+
+        /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        let configEmail = {
+            from: from,
+            to: to.split(','),
+            // cc: process.env.SENDGRID_MAIL_CC,
+            // bcc: process.env.SENDGRID_MAIL_BCC,
+            subject: `PROCESO LIQUIDACIÓN ${DateFormat(new Date(), "yyyy-mm-dd")}`,
+            template: 'settlement',
+            context: {
+                dear: 'Estimados,',
+                message: 'Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:',
+                urlTag: urlTag,
+                greeting: 'Atte.',
+                sender: process.env.NOMBRE_INFORMA
+            }
+        }
+
+        /** CONFIGURAR PARÁMETROS DE HBS. */
+        const optionsHBS = {
+            partialsDir: 'shared/views/email',
+            viewPath: '../shared/views/email'
+        }
+
+        /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        if (result.error)
+            throw result.error;
 
         /** RETORNO RESPUESTA. */
         return result;

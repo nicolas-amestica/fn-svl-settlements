@@ -2,6 +2,7 @@
 const fs = require('fs').promises;
 const ObjectsToCsv = require('objects-to-csv-file');
 const XLSX = require('xlsx')
+const compressing = require('compressing');
 
 /**
  * Eliminar el archivo csv ubicado en la ruta que se indique.
@@ -115,6 +116,38 @@ module.exports.exportToXlsxFromObject = async (data, fileName) => {
     } catch (error) {
 
         /** RETORNA EXCEPCIÓN. */
+        return { error };
+
+    }
+
+};
+
+/**
+ * Comprimir archivo.
+ * @param {Json} data: Objeto que contiene propiedades 'name' y 'path' (incluyen extensión).
+ * @return {Json}: Retorna objeto JSON con nombre del archivo y ruta, si falla retorna expceción.
+ */
+module.exports.compressingFile = async (data) => {
+
+    try {
+
+        let extension = '.gzip';
+
+        let result = await compressing.gzip.compressFile(data.path, `${data.path}${extension}`)
+
+        if (result !== undefined)
+            throw 'No se pudo comprimir el archivo';
+
+        result = {
+            name: `${data.name}${extension}`,
+            path: `${data.path}${extension}`
+        }
+
+        return result
+
+    } catch (error) {
+
+        /** CAPTURA EXCEPCIÓN. */
         return { error };
 
     }
