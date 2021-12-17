@@ -145,50 +145,50 @@ module.exports.sendEmail = async (context, file) => {
         let cc = process.env.SENDGRID_MAIL_CC;
         let bcc = process.env.SENDGRID_MAIL_BCC;
 
-        // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        // const message = {
-        //     from: from,
-        //     to: to.split(','),
-        //     // cc: cc.split(','),
-        //     // bcc: bc.split(','),
-        //     subject: `Informe Preliquidación ${dateFormat(new Date(), "yyyy-mm-dd")}`,
-        //     html: `Estimados,<br><br>
-        //     En el siguiente enlace podrá descargar el informe preliquidación<br><br>
-        //     <a href='${file.url}'>DESCARGAR</a><br><br>
-        //     Atte.<br>
-        //     ${process.env.NOMBRE_INFORMA}`,
-        // }
-
-        // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        // let result = await Email.sendFromSendgrid(message);
-
-         /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-         let configEmail = {
+        /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        const message = {
             from: from,
             to: to.split(','),
-            // cc: process.env.SENDGRID_MAIL_CC,
-            // bcc: process.env.SENDGRID_MAIL_BCC,
             subject: `Informe SKU ${DateFormat(new Date(), "yyyy-mm-dd")}`,
-            template: 'settlement',
-            context: {
-                dear: 'Estimados(as),',
-                message: 'En el siguiente enlace podrá descargar el informe SKU:',
-                urlTag: { url: file.url, name: (path.basename(file.url, '.xlsx')) },
-                greeting: 'Atte.',
-                sender: `${process.env.NOMBRE_INFORMA}`
-            }
-        }
-
-        /** CONFIGURAR PARÁMETROS DE HBS. */
-        const optionsHBS = {
-            partialsDir: 'shared/views/email',
-            viewPath: '../shared/views/email'
+            html: `Estimados,<br><br>
+            En el siguiente enlace podrá descargar el informe SKU:<br><br>
+            1.- <a href='${file.url}'>${path.basename(file.url, '.xlsx')}</a><br><br></br>    
+            Atte.<br>
+            ${process.env.NOMBRE_INFORMA}`,
         }
 
         /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        let result = await Email.sendFromSendgrid(message);
         if (result.error)
-            throw result.error;
+            throw result.error
+
+        //  /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        //  let configEmail = {
+        //     from: from,
+        //     to: to.split(','),
+        //     // cc: process.env.SENDGRID_MAIL_CC,
+        //     // bcc: process.env.SENDGRID_MAIL_BCC,
+        //     subject: `Informe SKU ${DateFormat(new Date(), "yyyy-mm-dd")}`,
+        //     template: 'settlement',
+        //     context: {
+        //         dear: 'Estimados(as),',
+        //         message: 'En el siguiente enlace podrá descargar el informe SKU:',
+        //         urlTag: { url: file.url, name: (path.basename(file.url, '.xlsx')) },
+        //         greeting: 'Atte.',
+        //         sender: `${process.env.NOMBRE_INFORMA}`
+        //     }
+        // }
+
+        // /** CONFIGURAR PARÁMETROS DE HBS. */
+        // const optionsHBS = {
+        //     partialsDir: 'shared/views/email',
+        //     viewPath: '../shared/views/email'
+        // }
+
+        // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        // let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        // if (result.error)
+        //     throw result.error;
 
         /** RETORNO RESPUESTA. */
         return result;

@@ -17,14 +17,16 @@ module.exports.sendFromSendgrid = async (message) => {
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
         /** ENVIAR CORREO. */
-        let resp = await sgMail.send(message);
+        let data = await sgMail.send(message);
+        if (data.error)
+            throw data.error
 
-        /** RETORNO RESPUESTA. */
-        return resp;
+        /** RETORNA RESPUESTA */
+        return data;
 
     } catch (error) {
 
-        /** CAPTURA EXCEPCIÓN. */
+        /** RETORNA EXCEPCIÓN */
         return { error }
 
     }

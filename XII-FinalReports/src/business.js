@@ -2,7 +2,7 @@
 const fs = require('fs');
 const MySQL = require('../../libs/mySQL');
 const FileManager = require('../../libs/fileManager');
-const DateFormat = require('dateformat');
+const DateFormat = require('DateFormat');
 const BlobStorage = require('../../libs/blobStorage');
 const Email = require('../../libs/email');
 const path = require('path');
@@ -188,6 +188,7 @@ module.exports.getDataSellers = async (context) => {
             WHERE
                 term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
         `;
+        // term = '${DateFormat(new Date(), "yyyy-mm-dd")}'
 
         /** EJECUCIÓN DE QUERY. */
         let data = await MySQL.getDataFinances(query);
@@ -346,53 +347,55 @@ module.exports.sendEmail = async (context, urlFiles) => {
         
         let from = process.env.SENDGRID_MAIL_FROM;
         let to = process.env.SENDGRID_MAIL_TO;
-        let cc = process.env.SENDGRID_MAIL_CC;
-        let bcc = process.env.SENDGRID_MAIL_BCC;
-
-        // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        // const message = {
-        //     from: from,
-        //     to: to.split(','),
-        //     // cc: cc.split(','),
-        //     // bcc: bc.split(','),
-        //     subject: `Informe Preliquidación ${dateFormat(new Date(), "yyyy-mm-dd")}`,
-        //     html: `Estimados,<br><br>
-        //     En el siguiente enlace podrá descargar el informe preliquidación<br><br>
-        //     <a href='${file.url}'>DESCARGAR</a><br><br>
-        //     Atte.<br>
-        //     ${process.env.NOMBRE_INFORMA}`,
-        // }
-
-        // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        // let result = await Email.sendFromSendgrid(message);
+        // let cc = process.env.SENDGRID_MAIL_CC;
+        // let bcc = process.env.SENDGRID_MAIL_BCC;
 
         /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-        let configEmail = {
+        const message = {
             from: from,
             to: to.split(','),
-            // cc: process.env.SENDGRID_MAIL_CC,
-            // bcc: process.env.SENDGRID_MAIL_BCC,
             subject: `PROCESO LIQUIDACIÓN ${DateFormat(new Date(), "yyyy-mm-dd")}`,
-            template: 'settlement',
-            context: {
-                dear: 'Estimados,',
-                message: 'Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:',
-                urlTag: urlTag,
-                greeting: 'Atte.',
-                sender: process.env.NOMBRE_INFORMA
-            }
-        }
-
-        /** CONFIGURAR PARÁMETROS DE HBS. */
-        const optionsHBS = {
-            partialsDir: 'shared/views/email',
-            viewPath: '../shared/views/email'
+            html: `Estimados,<br><br>
+            Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:<br><br>
+            1.- <a href='${urlTag[0].url}'>${urlTag[0].name}</a><br>
+            2.- <a href='${urlTag[1].url}'>${urlTag[1].name}</a><br>
+            3.- <a href='${urlTag[2].url}'>${urlTag[2].name}</a><br><br></br>    
+            Atte.<br>
+            ${process.env.NOMBRE_INFORMA}`,
         }
 
         /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-        let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        let result = await Email.sendFromSendgrid(message);
         if (result.error)
-            throw result.error;
+            throw result.error
+
+        // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+        // let configEmail = {
+        //     from: from,
+        //     to: to.split(','),
+        //     // cc: process.env.SENDGRID_MAIL_CC,
+        //     // bcc: process.env.SENDGRID_MAIL_BCC,
+        //     subject: `PROCESO LIQUIDACIÓN ${DateFormat(new Date(), "yyyy-mm-dd")}`,
+        //     template: 'settlement',
+        //     context: {
+        //         dear: 'Estimados,',
+        //         message: 'Ha finalizado el proceso liquidación, se adjunta enlaces con reportes finales:',
+        //         urlTag: urlTag,
+        //         greeting: 'Atte.',
+        //         sender: process.env.NOMBRE_INFORMA
+        //     }
+        // }
+
+        // /** CONFIGURAR PARÁMETROS DE HBS. */
+        // const optionsHBS = {
+        //     partialsDir: 'shared/views/email',
+        //     viewPath: '../shared/views/email'
+        // }
+
+        // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+        // let result = await Email.sendFromGmail(configEmail, optionsHBS);
+        // if (result.error)
+        //     throw result.error;
 
         /** RETORNO RESPUESTA. */
         return result;

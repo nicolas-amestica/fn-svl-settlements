@@ -50,8 +50,6 @@ module.exports.getDataGcp = async (context) => {
         const [rsin] = await gcp.select(categorias_dwh);
         const [rs] = await gcp.select(folios_recepcionados);
         const [rsfa] = await gcp.select(folios_faltantes);
-        
-        context.log("CREANDO EXCEL");
 
         let workbook = await XlsxPopulate.fromBlankAsync();
 
@@ -149,6 +147,23 @@ module.exports.getDataGcp = async (context) => {
                 newSheet2.cell("F" + ii).value(F);
                 newSheet2.cell("G" + ii).value(G);
                 newSheet2.cell("H" + ii).value(H);
+
+                ii++;
+            }
+
+            //PENDIENTES
+            if ((E != null && E != "") && C.toString() == "FBS") {
+                pendienteArray.push(A);
+
+                newSheet2.cell("A" + ii).value(A);
+                newSheet2.cell("B" + ii).value(B);
+                newSheet2.cell("C" + ii).value(C);
+                newSheet2.cell("D" + ii).value(D);
+                newSheet2.cell("E" + ii).value(E);
+                newSheet2.cell("F" + ii).value(F);
+                newSheet2.cell("G" + ii).value(G);
+                newSheet2.cell("H" + ii).value(H);
+
                 ii++;
             }
 
@@ -182,6 +197,7 @@ module.exports.getDataGcp = async (context) => {
 
             i++;
             callback();
+
         }, (err, results) => {
             
             context.log("RECORRIENDO RSFA 2/3");
@@ -244,53 +260,70 @@ module.exports.getDataGcp = async (context) => {
                         /** ELIMINAR HOJA */
                         workbook.deleteSheet("Sheet1");
 
-                        context.log("GENERANDO REPORTE EN BASE64.");
+                        context.log("ENVIANDO CORREO");
 
                         await workbook.outputAsync().
                             then(async (data) => {
+
                                 const csv = new Buffer.from(data).toString('base64');
-                                const buf = new Buffer.from(csv, "base64");
-
-                                /**
-                                 * Nicolas Améstica Vidal
-                                 * 2021-11-23 17:38 hrs.
-                                 * Enviar erchivo por email.
-                                */
-
-                                context.log("ENVIANDO REPORTE GCP POR CORREO.");
+                                // const buf = new Buffer.from(csv, "base64");
 
                                 /** CONFIGURAR PARÁMETROS DEL EMAIL. */
-                                let configEmail = {
-                                    from: process.env.GMAIL_AUTH_USER,
-                                    to: process.env.GMAIL_MAIL_TO,
-                                    cc: process.env.GMAIL_MAIL_CC,
-                                    bcc: process.env.GMAIL_MAIL_BCC,
-                                    subject: `Archivo GCP ${dateFormat(new Date(), "yyyy-mm-dd")}`,
-                                    template: 'settlement',
-                                    attachments: {
+                                const message = {
+                                    from: process.env.SENDGRID_MAIL_FROM,
+                                    to: process.env.SENDGRID_MAIL_TO.split(','),
+                                    subject: `Reporte GCP por Liquidar ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+                                    attachments: [{
+                                        content: csv,
                                         filename: `GCP_PorLiquidar_${dateFormat(new Date(), "yymmddHMMss")}.xlsx`,
-                                        content: buf
-                                    },
-                                    context: {
-                                        dear: 'Estimados,',
-                                        message: 'Se ha generado resporte GCPPorLiquidar:',
-                                        greeting: 'Atte.',
-                                        sender: process.env.NOMBRE_INFORMA
-                                    }
+                                        type: "application/xlsx",
+                                        disposition: "attachment"
+                                    }],
+                                    html: `Estimados,<br><br>
+                                    Se adjunta reporte GCP Por Liquidar<br><br><br><br>
+                                    Atte.<br>
+                                    ${process.env.NOMBRE_INFORMA}`,
                                 }
-
-                                /** CONFIGURAR PARÁMETROS DE HBS. */
-                                const optionsHBS = {
-                                    partialsDir: 'shared/views/email',
-                                    viewPath: '../shared/views/email',
-                                }
-
+                        
                                 /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
-                                let result = await email.sendFromGmail(configEmail, optionsHBS);
-                                if (result.errno) {
-                                    context.log('No se pudo enviar el email.');
-                                    throw error;
-                                }
+                                let result = await email.sendFromSendgrid(message);
+                                if (result.error)
+                                    throw result.error
+
+                                // context.log("ENVIANDO REPORTE GCP POR CORREO.");
+
+                                // /** CONFIGURAR PARÁMETROS DEL EMAIL. */
+                                // let configEmail = {
+                                //     from: process.env.GMAIL_AUTH_USER,
+                                //     to: process.env.GMAIL_MAIL_TO,
+                                //     cc: process.env.GMAIL_MAIL_CC,
+                                //     bcc: process.env.GMAIL_MAIL_BCC,
+                                //     subject: `Archivo GCP ${dateFormat(new Date(), "yyyy-mm-dd")}`,
+                                //     template: 'settlement',
+                                //     attachments: {
+                                //         filename: `GCP_PorLiquidar_${dateFormat(new Date(), "yymmddHMMss")}.xlsx`,
+                                //         content: buf
+                                //     },
+                                //     context: {
+                                //         dear: 'Estimados,',
+                                //         message: 'Se ha generado resporte GCPPorLiquidar:',
+                                //         greeting: 'Atte.',
+                                //         sender: process.env.NOMBRE_INFORMA
+                                //     }
+                                // }
+
+                                // /** CONFIGURAR PARÁMETROS DE HBS. */
+                                // const optionsHBS = {
+                                //     partialsDir: 'shared/views/email',
+                                //     viewPath: '../shared/views/email',
+                                // }
+
+                                // /** LLAMADA A MÉTODO QUE ENVÍA EMAIL ENVIÁNDOLE DOS PARÁMETROS. */
+                                // let result = await email.sendFromGmail(configEmail, optionsHBS);
+                                // if (result.errno) {
+                                //     context.log('No se pudo enviar el email.');
+                                //     throw error;
+                                // }
                         })
                 });
 
